@@ -35,17 +35,15 @@ import (
 	"errors"
 	"os"
 
+	"github.com/jkp85/cli-tools/api"
 	"github.com/jkp85/go-sdk/client/projects"
-	"github.com/jkp85/threeblades/api"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-type FilterVar struct {
-}
-
 func projectsCmd() *cobra.Command {
-
+	var limit, offset string
+	filters := api.NewFilterVal()
 	cmd := &cobra.Command{
 		Use:   "projects",
 		Short: "Handle projects",
@@ -58,6 +56,9 @@ func projectsCmd() *cobra.Command {
 				return errors.New("You must provide a namespace")
 			}
 			params.SetNamespace(ns)
+			params.SetLimit(&limit)
+			params.SetOffset(&offset)
+			params.SetPrivate(filters.Get("private"))
 			resp, err := cli.Projects.ProjectsList(params)
 			if err != nil {
 				return err
@@ -67,11 +68,11 @@ func projectsCmd() *cobra.Command {
 			return enc.Encode(resp.Payload)
 		},
 	}
-	cmd.Flags().VarP()
+	cmd.Flags().StringVar(&limit, "limit", "10", "Limit list results")
+	cmd.Flags().StringVar(&offset, "offset", "0", "Offset list results")
+	cmd.Flags().Var(filters, "filter", "Filter results")
 	return cmd
 }
-
-// projectsCmd represents the projects command
 
 func init() {
 	RootCmd.AddCommand(projectsCmd())

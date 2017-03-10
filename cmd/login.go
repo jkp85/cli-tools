@@ -40,8 +40,8 @@ import (
 
 	"golang.org/x/crypto/ssh/terminal"
 
+	"github.com/jkp85/cli-tools/api"
 	"github.com/jkp85/go-sdk/client/auth"
-	"github.com/jkp85/threeblades/api"
 	"github.com/spf13/cobra"
 	jww "github.com/spf13/jwalterweatherman"
 	"github.com/spf13/viper"

@@ -30,7 +30,7 @@
 
 package main
 
-import "github.com/jkp85/threeblades/cmd"
+import "github.com/jkp85/cli-tools/cmd"
 
 func main() {
 	cmd.Execute()
