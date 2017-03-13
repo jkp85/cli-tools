@@ -6,7 +6,7 @@ import (
 )
 
 func NewFilterVal() *filter {
-	return &filter{changed: false, value: map[string]string{}}
+	return &filter{changed: false, value: make(map[string]string)}
 }
 
 type filter struct {

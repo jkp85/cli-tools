@@ -51,5 +51,5 @@ func (t *TableRenderer) Render(w io.Writer) error {
 func (t *TableRenderer) processFormat() string {
 	replacer := strings.NewReplacer("{{", "", "}}", "", ".", "", " ", "")
 	columns := replacer.Replace(t.format)
-	return fmt.Sprintf("%s\n{{ range . }}%s\n{{ end  }}", columns, t.format)
+	return fmt.Sprintf("%s\n{{ range . }}%s\n{{ end }}", columns, t.format)
 }
