@@ -11,7 +11,7 @@ import (
 )
 
 func projectsCmd() *cobra.Command {
-	var limit, offset, format string
+	var limit, offset, format, order string
 	filters := api.NewFilterVal()
 	cmd := &cobra.Command{
 		Use:   "projects",
@@ -27,6 +27,7 @@ func projectsCmd() *cobra.Command {
 			params.SetNamespace(ns)
 			params.SetLimit(&limit)
 			params.SetOffset(&offset)
+			params.SetOrdering(&order)
 			params.SetPrivate(filters.Get("private"))
 			resp, err := cli.Projects.ProjectsList(params)
 			if err != nil {
@@ -42,6 +43,7 @@ func projectsCmd() *cobra.Command {
 	cmd.Flags().StringVar(&limit, "limit", "10", "Limit list results")
 	cmd.Flags().StringVar(&offset, "offset", "0", "Offset list results")
 	cmd.Flags().StringVar(&format, "format", "json", "Output format")
+	cmd.Flags().StringVar(&order, "order", "", "Output order")
 	cmd.Flags().Var(filters, "filter", "Filter results")
 	return cmd
 }
