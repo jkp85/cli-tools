@@ -41,7 +41,7 @@ func projectsCmd() *cobra.Command {
 	}
 	cmd.Flags().StringVar(&limit, "limit", "10", "Limit list results")
 	cmd.Flags().StringVar(&offset, "offset", "0", "Offset list results")
-	cmd.Flags().StringVar(&format, "format", "", "Output format")
+	cmd.Flags().StringVar(&format, "format", "json", "Output format")
 	cmd.Flags().Var(filters, "filter", "Filter results")
 	return cmd
 }
