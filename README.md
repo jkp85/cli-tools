@@ -47,3 +47,8 @@ In order for cli-tools to work with your api server you need to put your api end
 CLI are looking for config file in your home directory. Default config file can be json, yaml or toml for example
 
 	.threeblades.yaml
+
+Currently supported options are:
+
+	root: localhost:5000 // api root
+	namespace: [your_username]
