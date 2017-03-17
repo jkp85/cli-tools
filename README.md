@@ -12,12 +12,31 @@ Make sure you have go available in your shell.
 
 	go version
 
-To compile run:
+Check if you have GOPATH in your env variables (default is $HOME/go)
 
-	CGO_ENABLED=0 go build -o tbs .
+It's good idea to add $GOPATH/bin folder to your PATH variable.
 
-Check if everything is ok:
+Get all you need:
 
-	./tbs
+	go get github.com/jkp85/cli-tools
+
+If you added your bin folder from GOPATH to your PATH then you can just run:
+
+	cli-tools
+
+If don't then:
+
+	cd $GOPATH/bin
+	./cli-tools
 
 If you have no error message then you are good to go :)
+
+If you want to recompile it then:
+
+	cd $GOPATH/src/github.com/jkp85/cli-tools
+	go install
+
+
+To update cli-tools you can do:
+
+	go get -u github.com/jkp85/cli-tools
