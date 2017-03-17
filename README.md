@@ -40,3 +40,10 @@ If you want to recompile it then:
 To update cli-tools you can do:
 
 	go get -u github.com/jkp85/cli-tools
+
+## Config
+
+In order for cli-tools to work with your api server you need to put your api endpoint to config file.
+CLI are looking for config file in your home directory. Default config file can be json, yaml or toml for example
+
+	.threeblades.yaml
