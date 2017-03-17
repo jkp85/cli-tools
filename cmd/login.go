@@ -76,7 +76,7 @@ func readPassword() (string, error) {
 }
 
 func getToken(server, username, password string) (string, error) {
-	cli := api.APIClient()
+	cli := api.Client()
 	params := auth.NewAuthSimpleTokenAuthCreateParams()
 	params.SetData(auth.AuthSimpleTokenAuthCreateBody{
 		Username: &username,

@@ -4,9 +4,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 	"text/template"
+
+	"github.com/spf13/viper"
 )
+
+func Render(formatName string, target interface{}) error {
+	format := viper.GetString(formatName)
+	renderer := NewRenderer(format, target)
+	return renderer.Render(os.Stdout)
+}
 
 func NewRenderer(format string, target interface{}) Renderer {
 	switch strings.SplitN(format, " ", 2)[0] {

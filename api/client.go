@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func APIClient() *apiclient.Threeblades {
+func Client() *apiclient.Threeblades {
 	apiRoot := viper.GetString("root")
 	token := viper.GetString("token")
 	transport := httptransport.New(apiRoot, "", []string{"http"})

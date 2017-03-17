@@ -12,7 +12,7 @@ var cfgFile string
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
-	Use:   "threeblades",
+	Use:   "tbs",
 	Short: "3Blades CLI",
 }
 
@@ -20,7 +20,6 @@ var RootCmd = &cobra.Command{
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
-		jww.ERROR.Println(err)
 		os.Exit(-1)
 	}
 }
@@ -28,7 +27,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.threeblades.yaml)")
-	RootCmd.PersistentFlags().StringP("namespace", "n", "", "3Blades namespace")
+	RootCmd.PersistentFlags().String("namespace", "", "3Blades namespace")
 	viper.BindPFlag("namespace", RootCmd.PersistentFlags().Lookup("namespace"))
 }
 
