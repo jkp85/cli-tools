@@ -41,6 +41,9 @@ func initConfig() {
 	viper.AddConfigPath("$HOME")        // adding home directory as first search path
 	viper.AddConfigPath(".")
 	viper.AutomaticEnv() // read in environment variables that match
+	viper.SetEnvPrefix("THREEBLADES")
+	viper.BindEnv("project")
+	viper.BindEnv("namespace")
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err != nil {
