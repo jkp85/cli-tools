@@ -4,11 +4,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/jkp85/cli-tools/api"
-	"github.com/jkp85/cli-tools/utils"
+	"github.com/jkp85/cli-tools/tbs/api"
+	"github.com/jkp85/cli-tools/tbs/utils"
 	"github.com/jkp85/go-sdk/client/projects"
 	"github.com/jkp85/go-sdk/models"
 	"github.com/spf13/cobra"
+	jww "github.com/spf13/jwalterweatherman"
 	"github.com/spf13/viper"
 )
 
@@ -239,11 +240,17 @@ func serverStartCmd() *cobra.Command {
 				}
 				serverID = server.ID
 			}
-			params := projects.NewProjectsServersStartParams()
+			cli := api.Client()
+			params := projects.NewProjectsServersStartCreateParams()
 			ns := viper.GetString("namespace")
 			params.SetNamespace(ns)
 			params.SetProjectPk(projectID)
-			params.SetID(serverID)
+			params.SetServerPk(serverID)
+			_, err = cli.Projects.ProjectsServersStartCreate(params)
+			if err != nil {
+				return err
+			}
+			jww.FEEDBACK.Println("Server started")
 			return nil
 		},
 	}

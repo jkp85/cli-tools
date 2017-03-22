@@ -10,7 +10,7 @@ import (
 
 	"golang.org/x/crypto/ssh/terminal"
 
-	"github.com/jkp85/cli-tools/api"
+	"github.com/jkp85/cli-tools/tbs/api"
 	"github.com/jkp85/go-sdk/client/auth"
 	"github.com/spf13/cobra"
 	jww "github.com/spf13/jwalterweatherman"
@@ -45,7 +45,12 @@ func newLoginCmd() *cobra.Command {
 				return err
 			}
 			viper.Set("token", token)
-			return saveToken(token)
+			err = saveToken(token)
+			if err != nil {
+				return err
+			}
+			jww.FEEDBACK.Println("\nLogin successful")
+			return nil
 		},
 	}
 	flags := loginCmd.Flags()

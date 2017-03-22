@@ -6,8 +6,8 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/jkp85/cli-tools/api"
-	"github.com/jkp85/cli-tools/utils"
+	"github.com/jkp85/cli-tools/tbs/api"
+	"github.com/jkp85/cli-tools/tbs/utils"
 	"github.com/jkp85/go-sdk/client/projects"
 	"github.com/jkp85/go-sdk/models"
 	"github.com/spf13/cobra"

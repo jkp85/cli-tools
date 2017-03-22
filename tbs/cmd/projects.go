@@ -3,13 +3,11 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 
-	"github.com/jkp85/cli-tools/api"
-	"github.com/jkp85/cli-tools/utils"
+	"github.com/jkp85/cli-tools/tbs/api"
+	"github.com/jkp85/cli-tools/tbs/utils"
 	"github.com/jkp85/go-sdk/client/projects"
-	"github.com/jkp85/go-sdk/models"
 	"github.com/spf13/cobra"
 	jww "github.com/spf13/jwalterweatherman"
 	"github.com/spf13/viper"
@@ -172,43 +170,22 @@ func addUserToProjectCmd() *cobra.Command {
 
 func addMembers(projectID string, members ...string) error {
 	cli := api.Client()
-	errCh := make(chan error)
-	respCh := make(chan *models.Collaborator)
-	add := func(members <-chan string) {
-		for member := range members {
-			params := projects.NewProjectsCollaboratorsCreateParams()
-			ns := viper.GetString("namespace")
-			params.SetNamespace(ns)
-			data := projects.ProjectsCollaboratorsCreateBody{
-				Owner: false,
-				Email: &member,
-			}
-			params.SetProjectPk(projectID)
-			params.SetData(data)
-			resp, err := cli.Projects.ProjectsCollaboratorsCreate(params)
-			if err != nil {
-				errCh <- err
-			}
-			respCh <- resp.Payload
-		}
-	}
-	membersCh := make(chan string)
 	for _, member := range members {
-		membersCh <- member
-	}
-	for w := 0; w < 5; w++ {
-		go add(membersCh)
-	}
-	close(membersCh)
-	format := viper.GetString("collaborator_format")
-	for {
-		select {
-		case r := <-respCh:
-			renderer := api.NewRenderer(format, r)
-			errCh <- renderer.Render(os.Stdout)
-		case err := <-errCh:
-			return err
+		params := projects.NewProjectsCollaboratorsCreateParams()
+		ns := viper.GetString("namespace")
+		params.SetNamespace(ns)
+		data := projects.ProjectsCollaboratorsCreateBody{
+			Owner: false,
+			Email: &member,
 		}
+		params.SetProjectPk(projectID)
+		params.SetData(data)
+		_, err := cli.Projects.ProjectsCollaboratorsCreate(params)
+		if err != nil {
+			jww.ERROR.Printf("Error adding memeber: %s\n", member)
+			continue
+		}
+		jww.FEEDBACK.Printf("Member added: %s\n", member)
 	}
 	return nil
 }
