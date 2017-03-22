@@ -10,8 +10,8 @@ import (
 
 	"golang.org/x/crypto/ssh/terminal"
 
-	"github.com/jkp85/cli-tools/tbs/api"
-	"github.com/jkp85/go-sdk/client/auth"
+	"github.com/3Blades/cli-tools/tbs/api"
+	"github.com/3Blades/go-sdk/client/auth"
 	"github.com/spf13/cobra"
 	jww "github.com/spf13/jwalterweatherman"
 	"github.com/spf13/viper"

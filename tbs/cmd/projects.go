@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jkp85/cli-tools/tbs/api"
-	"github.com/jkp85/cli-tools/tbs/utils"
-	"github.com/jkp85/go-sdk/client/projects"
+	"github.com/3Blades/cli-tools/tbs/api"
+	"github.com/3Blades/cli-tools/tbs/utils"
+	"github.com/3Blades/go-sdk/client/projects"
 	"github.com/spf13/cobra"
 	jww "github.com/spf13/jwalterweatherman"
 	"github.com/spf13/viper"

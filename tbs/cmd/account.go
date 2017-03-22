@@ -3,9 +3,9 @@ package cmd
 import (
 	"errors"
 
-	"github.com/jkp85/cli-tools/tbs/api"
-	"github.com/jkp85/go-sdk/client/users"
-	"github.com/jkp85/go-sdk/models"
+	"github.com/3Blades/cli-tools/tbs/api"
+	"github.com/3Blades/go-sdk/client/users"
+	"github.com/3Blades/go-sdk/models"
 	"github.com/spf13/cobra"
 	jww "github.com/spf13/jwalterweatherman"
 	"github.com/spf13/viper"

@@ -18,7 +18,7 @@ It's good idea to add $GOPATH/bin folder to your PATH variable.
 
 Get all you need:
 
-	go get github.com/jkp85/cli-tools
+	go get github.com/3Blades/cli-tools
 
 If you added your bin folder from GOPATH to your PATH then you can just run:
 
@@ -33,13 +33,13 @@ If you have no error message then you are good to go :)
 
 If you want to recompile it then:
 
-	cd $GOPATH/src/github.com/jkp85/cli-tools
+	cd $GOPATH/src/github.com/3Blades/cli-tools
 	go install
 
 
 To update cli-tools you can do:
 
-	go get -u github.com/jkp85/cli-tools
+	go get -u github.com/3Blades/cli-tools
 
 ## Config
 

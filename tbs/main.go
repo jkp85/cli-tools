@@ -30,7 +30,7 @@
 
 package main
 
-import "github.com/jkp85/cli-tools/tbs/cmd"
+import "github.com/3Blades/cli-tools/tbs/cmd"
 
 func main() {
 	cmd.Execute()

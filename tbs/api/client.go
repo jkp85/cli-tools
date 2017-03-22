@@ -3,7 +3,7 @@ package api
 import (
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-	apiclient "github.com/jkp85/go-sdk/client"
+	apiclient "github.com/3Blades/go-sdk/client"
 	"github.com/spf13/viper"
 )
 
