@@ -20,6 +20,8 @@ func init() {
 	sCmd.AddCommand(serverUpdateCmd())
 	sCmd.AddCommand(serverDescribeCmd())
 	sCmd.AddCommand(serverStartCmd())
+	sCmd.AddCommand(serverStopCmd())
+	sCmd.AddCommand(serverTerminateCmd())
 	RootCmd.AddCommand(sCmd)
 }
 
@@ -256,5 +258,83 @@ func serverStartCmd() *cobra.Command {
 	}
 	cmd.Flags().StringVar(&serverID, "uuid", "", "Server id")
 	cmd.Flags().StringVar(&name, "name", "", "Server name")
+	return cmd
+}
+
+func serverStopCmd() *cobra.Command {
+	var name, serverID string
+	cmd := &cobra.Command{
+		Use:   "stop",
+		Short: "Stop server",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if serverID == "" && name == "" {
+				return errors.New("You have to specify server id or name")
+			}
+			projectID, err := getProjectIDByName(viper.GetString("project"))
+			if err != nil {
+				return err
+			}
+			if serverID == "" {
+				server, err := getServerByName(name, projectID)
+				if err != nil {
+					return err
+				}
+				serverID = server.ID
+			}
+			cli := api.Client()
+			params := projects.NewProjectsServersStopCreateParams()
+			ns := viper.GetString("namespace")
+			params.SetNamespace(ns)
+			params.SetProjectPk(projectID)
+			params.SetServerPk(serverID)
+			_, err = cli.Projects.ProjectsServersStopCreate(params)
+			if err != nil {
+				return err
+			}
+			jww.FEEDBACK.Println("Server stopped")
+			return nil
+		},
+	}
+	cmd.Flags().StringVar(&name, "name", "", "Server name")
+	cmd.Flags().StringVar(&serverID, "uuid", "", "Server id")
+	return cmd
+}
+
+func serverTerminateCmd() *cobra.Command {
+	var name, serverID string
+	cmd := &cobra.Command{
+		Use:   "terminate",
+		Short: "Terminate server",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if serverID == "" && name == "" {
+				return errors.New("You have to specify server id or name")
+			}
+			projectID, err := getProjectIDByName(viper.GetString("project"))
+			if err != nil {
+				return err
+			}
+			if serverID == "" {
+				server, err := getServerByName(name, projectID)
+				if err != nil {
+					return err
+				}
+				serverID = server.ID
+			}
+			cli := api.Client()
+			params := projects.NewProjectsServersTerminateCreateParams()
+			ns := viper.GetString("namespace")
+			params.SetNamespace(ns)
+			params.SetProjectPk(projectID)
+			params.SetServerPk(serverID)
+			_, err = cli.Projects.ProjectsServersTerminateCreate(params)
+			if err != nil {
+				return err
+			}
+			jww.FEEDBACK.Println("Server terminated")
+			return nil
+		},
+	}
+	cmd.Flags().StringVar(&name, "name", "", "Server name")
+	cmd.Flags().StringVar(&serverID, "uuid", "", "Server id")
 	return cmd
 }
