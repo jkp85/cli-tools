@@ -13,9 +13,9 @@ func init() {
 }
 
 const (
-	projectTmpl   = `export THREEBLADES_PROJECT=%s`
-	namespaceTmlp = `export THREEBLADES_NAMESPACE=%s`
-	infoTmpl      = "\n# Run this command to configure your shell:\n# eval $(%s)"
+	projectTmpl   = "export THREEBLADES_PROJECT=%s\n"
+	namespaceTmlp = "export THREEBLADES_NAMESPACE=%s\n"
+	infoTmpl      = "# Run this command to configure your shell:\n# eval $(%s)"
 )
 
 func envCmd() *cobra.Command {
