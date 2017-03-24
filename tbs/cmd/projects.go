@@ -15,6 +15,7 @@ import (
 
 func init() {
 	projectCmd := projectsCmd()
+	projectCmd.AddCommand(projectListCmd())
 	projectCmd.AddCommand(projectCreateCmd())
 	projectCmd.AddCommand(projectUpdateCmd())
 	projectCmd.AddCommand(projectDeleteCmd())
@@ -23,12 +24,19 @@ func init() {
 }
 
 func projectsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "project",
+		Short: "Handle projects",
+	}
+	return cmd
+}
+
+func projectListCmd() *cobra.Command {
 	var lf utils.ListFlags
 	filters := api.NewFilterVal()
 	cmd := &cobra.Command{
-		Use:   "projects",
-		Short: "Handle projects",
-		Long:  ``,
+		Use:   "ls",
+		Short: "List projects",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cli := api.Client()
 			params := projects.NewProjectsListParams()
