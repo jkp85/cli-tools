@@ -63,21 +63,19 @@ func serverLsCmd() *cobra.Command {
 }
 
 type ServerConfig struct {
-	Script   *string `json:"script"`
-	Function *string `json:"function"`
+	Script   string `json:"script,omitempty"`
+	Function string `json:"function,omitempty"`
+	Command  string `json:"command,omitempty"`
+	Type     string `json:"type,omitempty"`
 }
 
 func serverCreateCmd() *cobra.Command {
 	body := projects.ProjectsServersCreateBody{
 		Name:                 new(string),
-		EnvironmentType:      new(string),
 		EnvironmentResources: new(string),
 		Connected:            []string{},
-		Config: &ServerConfig{
-			Script:   new(string),
-			Function: new(string),
-		},
 	}
+	bodyConf := &ServerConfig{}
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create server",
@@ -86,6 +84,7 @@ func serverCreateCmd() *cobra.Command {
 			params := projects.NewProjectsServersCreateParams()
 			ns := viper.GetString("namespace")
 			params.SetNamespace(ns)
+			body.Config = bodyConf
 			params.SetData(body)
 			projectID, err := getProjectIDByName(viper.GetString("project"))
 			if err != nil {
@@ -100,11 +99,13 @@ func serverCreateCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(body.Name, "name", "", "Server name")
-	cmd.Flags().StringVar(body.EnvironmentType, "type", "", "Server type")
+	cmd.Flags().StringVar(&body.ImageName, "image", "", "Server image")
 	cmd.Flags().StringVar(body.EnvironmentResources, "resources", "", "Server resources")
 	cmd.Flags().StringVar(&body.StartupScript, "startup-script", "", "Server startup script")
-	cmd.Flags().StringVar(body.Config.(*ServerConfig).Function, "function", "", "Function to run")
-	cmd.Flags().StringVar(body.Config.(*ServerConfig).Script, "script", "", "Script to run")
+	cmd.Flags().StringVar(&bodyConf.Function, "function", "", "Function to run")
+	cmd.Flags().StringVar(&bodyConf.Script, "script", "", "Script to run")
+	cmd.Flags().StringVar(&bodyConf.Command, "command", "", "Command to run")
+	cmd.Flags().StringVar(&bodyConf.Type, "type", "", "Server type [restful,cron,jupyter]")
 	return cmd
 }
 
@@ -171,22 +172,16 @@ func serverDescribeCmd() *cobra.Command {
 }
 
 func serverUpdateCmd() *cobra.Command {
-	var serverID, script, function string
+	var serverID string
 	body := projects.ProjectsServersPartialUpdateBody{
 		Connected: []string{},
-		Config:    make(map[string]string),
 	}
+	bodyConf := &ServerConfig{}
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: "Update server",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			bodyConf := body.Config.(map[string]string)
-			if script != "" {
-				bodyConf["script"] = script
-			}
-			if function != "" {
-				bodyConf["function"] = function
-			}
+			body.Config = bodyConf
 			cli := api.Client()
 			params := projects.NewProjectsServersPartialUpdateParams()
 			ns := viper.GetString("namespace")
@@ -214,11 +209,13 @@ func serverUpdateCmd() *cobra.Command {
 	}
 	cmd.Flags().StringVar(&serverID, "uuid", "", "Server id")
 	cmd.Flags().StringVar(&body.Name, "name", "", "Server name")
-	cmd.Flags().StringVar(&body.EnvironmentType, "type", "", "Server type")
+	cmd.Flags().StringVar(&body.ImageName, "image", "", "Server image")
 	cmd.Flags().StringVar(&body.EnvironmentResources, "resources", "", "Server resources")
 	cmd.Flags().StringVar(&body.StartupScript, "startup-script", "", "Server startup script")
-	cmd.Flags().StringVar(&function, "function", "", "Function to run")
-	cmd.Flags().StringVar(&script, "script", "", "Script to run")
+	cmd.Flags().StringVar(&bodyConf.Function, "function", "", "Function to run")
+	cmd.Flags().StringVar(&bodyConf.Script, "script", "", "Script to run")
+	cmd.Flags().StringVar(&bodyConf.Command, "command", "", "Command to run")
+	cmd.Flags().StringVar(&bodyConf.Type, "type", "", "Server type [restful,cron,jupyter]")
 	return cmd
 }
 
