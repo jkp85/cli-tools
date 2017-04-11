@@ -12,12 +12,14 @@ import (
 )
 
 func init() {
-	accountCmd := accountCmd()
-	accountCmd.AddCommand(accountCreateCmd())
-	accountCmd.AddCommand(accountDescribeCmd())
-	accountCmd.AddCommand(accountUpdateCmd())
-	accountCmd.AddCommand(accountDeleteCmd())
-	RootCmd.AddCommand(accountCmd)
+	cmd := accountCmd()
+	cmd.AddCommand(
+		accountCreateCmd(),
+		accountDescribeCmd(),
+		accountUpdateCmd(),
+		accountDeleteCmd(),
+	)
+	RootCmd.AddCommand(cmd)
 }
 
 func accountCmd() *cobra.Command {
@@ -52,17 +54,18 @@ func accountCreateCmd() *cobra.Command {
 			return api.Render("user_format", resp.Payload)
 		},
 	}
-	cmd.Flags().StringVar(&accountBody.FirstName, "first-name", "", "New account first name")
-	cmd.Flags().StringVar(&accountBody.LastName, "last-name", "", "New account last name")
-	cmd.Flags().StringVar(accountBody.Username, "username", "", "New account username")
-	cmd.Flags().StringVar(accountBody.Password, "password", "", "New account password")
-	cmd.Flags().StringVar(&accountBody.Profile.URL, "url", "", "New account url")
-	cmd.Flags().StringVar(&accountBody.Profile.AvatarURL, "avatar-url", "", "New account avatar-url")
-	cmd.Flags().StringVar(&accountBody.Profile.Bio, "bio", "", "New account bio")
-	cmd.Flags().StringVar(&accountBody.Profile.Location, "location", "", "New account location")
-	cmd.Flags().StringVar(&accountBody.Email, "email", "", "New account email")
-	cmd.Flags().StringVar(&accountBody.Profile.Company, "company", "", "New account company")
-	cmd.Flags().StringVar(&accountBody.Profile.Timezone, "timezone", "", "New account timezone")
+	flags := cmd.Flags()
+	flags.StringVar(&accountBody.FirstName, "first-name", "", "New account first name")
+	flags.StringVar(&accountBody.LastName, "last-name", "", "New account last name")
+	flags.StringVar(accountBody.Username, "username", "", "New account username")
+	flags.StringVar(accountBody.Password, "password", "", "New account password")
+	flags.StringVar(&accountBody.Profile.URL, "url", "", "New account url")
+	flags.StringVar(&accountBody.Profile.AvatarURL, "avatar-url", "", "New account avatar-url")
+	flags.StringVar(&accountBody.Profile.Bio, "bio", "", "New account bio")
+	flags.StringVar(&accountBody.Profile.Location, "location", "", "New account location")
+	flags.StringVar(&accountBody.Email, "email", "", "New account email")
+	flags.StringVar(&accountBody.Profile.Company, "company", "", "New account company")
+	flags.StringVar(&accountBody.Profile.Timezone, "timezone", "", "New account timezone")
 	return cmd
 }
 

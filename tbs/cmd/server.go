@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/3Blades/cli-tools/tbs/api"
 	"github.com/3Blades/cli-tools/tbs/utils"
@@ -14,15 +13,17 @@ import (
 )
 
 func init() {
-	sCmd := serverCmd()
-	sCmd.AddCommand(serverLsCmd())
-	sCmd.AddCommand(serverCreateCmd())
-	sCmd.AddCommand(serverUpdateCmd())
-	sCmd.AddCommand(serverDescribeCmd())
-	sCmd.AddCommand(serverStartCmd())
-	sCmd.AddCommand(serverStopCmd())
-	sCmd.AddCommand(serverTerminateCmd())
-	RootCmd.AddCommand(sCmd)
+	cmd := serverCmd()
+	cmd.AddCommand(
+		serverLsCmd(),
+		serverCreateCmd(),
+		serverUpdateCmd(),
+		serverDescribeCmd(),
+		serverStartCmd(),
+		serverStopCmd(),
+		serverTerminateCmd(),
+	)
+	RootCmd.AddCommand(cmd)
 }
 
 func serverCmd() *cobra.Command {
@@ -36,26 +37,17 @@ func serverCmd() *cobra.Command {
 }
 
 func serverLsCmd() *cobra.Command {
-	ls := utils.ListFlags{}
+	ls := &utils.ListFlags{}
 	cmd := &cobra.Command{
 		Use:   "ls",
 		Short: "List servers",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cli := api.Client()
-			params := projects.NewProjectsServersListParams()
-			ls.Apply(params)
-			ns := viper.GetString("namespace")
-			params.SetNamespace(ns)
-			projectID, err := getProjectIDByName(viper.GetString("project"))
+			resp, err := cli.ListServers(ls)
 			if err != nil {
 				return err
 			}
-			params.SetProjectPk(projectID)
-			resp, err := cli.Projects.ProjectsServersList(params)
-			if err != nil {
-				return err
-			}
-			return api.Render("server_format", resp.Payload)
+			return api.Render("server_format", resp)
 		},
 	}
 	ls.Set(cmd)
@@ -82,11 +74,10 @@ func serverCreateCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cli := api.Client()
 			params := projects.NewProjectsServersCreateParams()
-			ns := viper.GetString("namespace")
-			params.SetNamespace(ns)
+			params.SetNamespace(cli.Namespace)
 			body.Config = bodyConf
 			params.SetData(body)
-			projectID, err := getProjectIDByName(viper.GetString("project"))
+			projectID, err := cli.GetProjectID()
 			if err != nil {
 				return err
 			}
@@ -109,37 +100,6 @@ func serverCreateCmd() *cobra.Command {
 	return cmd
 }
 
-func getServerByName(name, projectID string) (*models.Server, error) {
-	cli := api.Client()
-	params := projects.NewProjectsServersListParams()
-	ns := viper.GetString("namespace")
-	params.SetNamespace(ns)
-	params.SetProjectPk(projectID)
-	params.SetName(&name)
-	resp, err := cli.Projects.ProjectsServersList(params)
-	if err != nil {
-		return &models.Server{}, err
-	}
-	if len(resp.Payload) < 1 {
-		return &models.Server{}, fmt.Errorf("There is no server with name: %s", name)
-	}
-	return resp.Payload[0], nil
-}
-
-func getServerByID(serverID, projectID string) (*models.Server, error) {
-	cli := api.Client()
-	params := projects.NewProjectsServersReadParams()
-	ns := viper.GetString("namespace")
-	params.SetNamespace(ns)
-	params.SetID(serverID)
-	params.SetProjectPk(projectID)
-	resp, err := cli.Projects.ProjectsServersRead(params)
-	if err != nil {
-		return &models.Server{}, err
-	}
-	return resp.Payload, nil
-}
-
 func serverDescribeCmd() *cobra.Command {
 	var name, serverID string
 	cmd := &cobra.Command{
@@ -148,17 +108,14 @@ func serverDescribeCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var server *models.Server
 			var err error
-			projectID, err := getProjectIDByName(viper.GetString("project"))
-			if err != nil {
-				return err
-			}
+			cli := api.Client()
 			if name == "" && serverID == "" {
 				return errors.New("You must specify either name or id")
 			}
 			if serverID != "" {
-				server, err = getServerByID(serverID, projectID)
+				server, err = cli.GetServerByID(serverID)
 			} else {
-				server, err = getServerByName(name, projectID)
+				server, err = cli.GetServerByName(name)
 			}
 			if err != nil {
 				return err
@@ -184,14 +141,9 @@ func serverUpdateCmd() *cobra.Command {
 			body.Config = bodyConf
 			cli := api.Client()
 			params := projects.NewProjectsServersPartialUpdateParams()
-			ns := viper.GetString("namespace")
-			params.SetNamespace(ns)
-			projectID, err := getProjectIDByName(viper.GetString("project"))
-			if err != nil {
-				return err
-			}
+			params.SetNamespace(cli.Namespace)
 			if serverID == "" {
-				server, err := getServerByName(body.Name, projectID)
+				server, err := cli.GetServerByName(body.Name)
 				if err != nil {
 					return err
 				}
@@ -199,6 +151,10 @@ func serverUpdateCmd() *cobra.Command {
 			}
 			params.SetID(serverID)
 			params.SetData(body)
+			projectID, err := cli.GetProjectID()
+			if err != nil {
+				return err
+			}
 			params.SetProjectPk(projectID)
 			resp, err := cli.Projects.ProjectsServersPartialUpdate(params)
 			if err != nil {
@@ -225,24 +181,24 @@ func serverStartCmd() *cobra.Command {
 		Use:   "start",
 		Short: "Start server",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			cli := api.Client()
 			if serverID == "" && name == "" {
 				return errors.New("You have to specify server id or name")
 			}
-			projectID, err := getProjectIDByName(viper.GetString("project"))
-			if err != nil {
-				return err
-			}
 			if serverID == "" {
-				server, err := getServerByName(name, projectID)
+				server, err := cli.GetServerByName(name)
 				if err != nil {
 					return err
 				}
 				serverID = server.ID
 			}
-			cli := api.Client()
 			params := projects.NewProjectsServersStartCreateParams()
 			ns := viper.GetString("namespace")
 			params.SetNamespace(ns)
+			projectID, err := cli.GetProjectID()
+			if err != nil {
+				return err
+			}
 			params.SetProjectPk(projectID)
 			params.SetServerPk(serverID)
 			_, err = cli.Projects.ProjectsServersStartCreate(params)
@@ -264,24 +220,23 @@ func serverStopCmd() *cobra.Command {
 		Use:   "stop",
 		Short: "Stop server",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			cli := api.Client()
 			if serverID == "" && name == "" {
 				return errors.New("You have to specify server id or name")
 			}
-			projectID, err := getProjectIDByName(viper.GetString("project"))
-			if err != nil {
-				return err
-			}
 			if serverID == "" {
-				server, err := getServerByName(name, projectID)
+				server, err := cli.GetServerByName(name)
 				if err != nil {
 					return err
 				}
 				serverID = server.ID
 			}
-			cli := api.Client()
 			params := projects.NewProjectsServersStopCreateParams()
-			ns := viper.GetString("namespace")
-			params.SetNamespace(ns)
+			params.SetNamespace(cli.Namespace)
+			projectID, err := cli.GetProjectID()
+			if err != nil {
+				return err
+			}
 			params.SetProjectPk(projectID)
 			params.SetServerPk(serverID)
 			_, err = cli.Projects.ProjectsServersStopCreate(params)
@@ -303,24 +258,23 @@ func serverTerminateCmd() *cobra.Command {
 		Use:   "terminate",
 		Short: "Terminate server",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			cli := api.Client()
 			if serverID == "" && name == "" {
 				return errors.New("You have to specify server id or name")
 			}
-			projectID, err := getProjectIDByName(viper.GetString("project"))
-			if err != nil {
-				return err
-			}
 			if serverID == "" {
-				server, err := getServerByName(name, projectID)
+				server, err := cli.GetServerByName(name)
 				if err != nil {
 					return err
 				}
 				serverID = server.ID
 			}
-			cli := api.Client()
 			params := projects.NewProjectsServersTerminateCreateParams()
-			ns := viper.GetString("namespace")
-			params.SetNamespace(ns)
+			params.SetNamespace(cli.Namespace)
+			projectID, err := cli.GetProjectID()
+			if err != nil {
+				return err
+			}
 			params.SetProjectPk(projectID)
 			params.SetServerPk(serverID)
 			_, err = cli.Projects.ProjectsServersTerminateCreate(params)

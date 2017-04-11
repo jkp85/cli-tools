@@ -1,0 +1,10 @@
+# whitelist
+language: go
+go:
+  - 1.8
+branches:
+  only:
+    - master
+sudo: required
+script:
+  - go test -v ./...

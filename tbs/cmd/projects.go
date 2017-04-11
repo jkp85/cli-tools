@@ -14,13 +14,15 @@ import (
 )
 
 func init() {
-	projectCmd := projectsCmd()
-	projectCmd.AddCommand(projectListCmd())
-	projectCmd.AddCommand(projectCreateCmd())
-	projectCmd.AddCommand(projectUpdateCmd())
-	projectCmd.AddCommand(projectDeleteCmd())
-	projectCmd.AddCommand(addUserToProjectCmd())
-	RootCmd.AddCommand(projectCmd)
+	cmd := projectsCmd()
+	cmd.AddCommand(
+		projectListCmd(),
+		projectCreateCmd(),
+		projectUpdateCmd(),
+		projectDeleteCmd(),
+		addUserToProjectCmd(),
+	)
+	RootCmd.AddCommand(cmd)
 }
 
 func projectsCmd() *cobra.Command {
@@ -40,11 +42,7 @@ func projectListCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cli := api.Client()
 			params := projects.NewProjectsListParams()
-			ns := viper.GetString("namespace")
-			if ns == "" {
-				return errors.New("You must provide a namespace")
-			}
-			params.SetNamespace(ns)
+			params.SetNamespace(cli.Namespace)
 			lf.Apply(params)
 			params.SetName(filters.Get("name"))
 			params.SetPrivate(filters.Get("private"))
@@ -77,8 +75,7 @@ func projectCreateCmd() *cobra.Command {
 			}
 			cli := api.Client()
 			params := projects.NewProjectsCreateParams()
-			ns := viper.GetString("namespace")
-			params.SetNamespace(ns)
+			params.SetNamespace(cli.Namespace)
 			params.SetData(body)
 			resp, err := cli.Projects.ProjectsCreate(params)
 			if err != nil {
@@ -99,22 +96,6 @@ func projectCreateCmd() *cobra.Command {
 	return cmd
 }
 
-func getProjectIDByName(name string) (string, error) {
-	cli := api.Client()
-	params := projects.NewProjectsListParams()
-	ns := viper.GetString("namespace")
-	params.SetNamespace(ns)
-	params.SetName(&name)
-	resp, err := cli.Projects.ProjectsList(params)
-	if err != nil {
-		return "", err
-	}
-	if len(resp.Payload) == 0 {
-		return "", fmt.Errorf("There is no project with name: '%s'", name)
-	}
-	return resp.Payload[0].ID, nil
-}
-
 func projectDeleteCmd() *cobra.Command {
 	var projectID, projectName string
 	cmd := &cobra.Command{
@@ -132,15 +113,14 @@ func projectDeleteCmd() *cobra.Command {
 				return nil
 			}
 			cli := api.Client()
-			ns := viper.GetString("namespace")
 			if projectID == "" {
-				projectID, err = getProjectIDByName(projectName)
+				projectID, err = cli.GetProjectIDByName(projectName)
 				if err != nil {
 					return err
 				}
 			}
 			deleteParams := projects.NewProjectsDeleteParams()
-			deleteParams.SetNamespace(ns)
+			deleteParams.SetNamespace(cli.Namespace)
 			deleteParams.SetID(projectID)
 			_, err = cli.Projects.ProjectsDelete(deleteParams)
 			if err != nil {
@@ -161,11 +141,18 @@ func addUserToProjectCmd() *cobra.Command {
 		Use:   "adduser [email]",
 		Short: "Add collaborator to project",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			var projectID string
+			var err error
+			cli := api.Client()
 			if len(args) < 1 {
 				return errors.New("You must specify user email")
 			}
 			email := args[0]
-			projectID, err := getProjectIDByName(projectName)
+			if projectName != "" {
+				projectID, err = cli.GetProjectIDByName(projectName)
+			} else {
+				projectID, err = cli.GetProjectID()
+			}
 			if err != nil {
 				return err
 			}
@@ -181,8 +168,7 @@ func addMembers(projectID string, members ...string) error {
 	cli := api.Client()
 	for _, member := range members {
 		params := projects.NewProjectsCollaboratorsCreateParams()
-		ns := viper.GetString("namespace")
-		params.SetNamespace(ns)
+		params.SetNamespace(cli.Namespace)
 		data := projects.ProjectsCollaboratorsCreateBody{
 			Owner: false,
 			Email: &member,
@@ -207,21 +193,20 @@ func projectUpdateCmd() *cobra.Command {
 		Use:   "update",
 		Short: "Update project",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			cli := api.Client()
 			var err error
 			if updateBody.Name == "" || projectID == "" {
 				return errors.New("You must provide either project name or id")
 			}
 			if projectID == "" {
-				projectID, err = getProjectIDByName(updateBody.Name)
+				projectID, err = cli.GetProjectIDByName(updateBody.Name)
 			}
 			err = addMembers(projectID, members...)
 			if err != nil {
 				return err
 			}
-			cli := api.Client()
 			params := projects.NewProjectsPartialUpdateParams()
-			ns := viper.GetString("namespace")
-			params.SetNamespace(ns)
+			params.SetNamespace(cli.Namespace)
 			params.SetID(projectID)
 			params.SetData(updateBody)
 			resp, err := cli.Projects.ProjectsPartialUpdate(params)
