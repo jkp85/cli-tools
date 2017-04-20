@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
 	"github.com/3Blades/cli-tools/tbs/utils"
 	apiclient "github.com/3Blades/go-sdk/client"
 	"github.com/3Blades/go-sdk/models"
+	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 	uuid "github.com/satori/go.uuid"
 )
@@ -29,8 +31,12 @@ func TestGetProjectIDByName(t *testing.T) {
 	}
 	server := runServer([]*models.Project{project})
 	defer server.Close()
+	uri, err := url.Parse(server.URL)
+	if err != nil {
+		t.Error(err)
+	}
 	cli := &APIClient{
-		apiclient.New(transport(server.URL, ""), strfmt.Default),
+		apiclient.New(httptransport.New(uri.Host, "", []string{"http"}), strfmt.Default),
 		"", "", "", "", "",
 	}
 	id, err := cli.GetProjectIDByName(name)
@@ -59,8 +65,12 @@ func TestListServers(t *testing.T) {
 	}
 	server := runServer(servers)
 	defer server.Close()
+	uri, err := url.Parse(server.URL)
+	if err != nil {
+		t.Error(err)
+	}
 	cli := &APIClient{
-		apiclient.New(transport(server.URL, ""), strfmt.Default),
+		apiclient.New(httptransport.New(uri.Host, "", []string{"http"}), strfmt.Default),
 		"test", projectName, projectID, "", "",
 	}
 	results, err := cli.ListServers(&utils.ListFlags{})
@@ -83,8 +93,12 @@ func TestGetServerByName(t *testing.T) {
 	}
 	server := runServer([]*models.Server{apiServer})
 	defer server.Close()
+	uri, err := url.Parse(server.URL)
+	if err != nil {
+		t.Error(err)
+	}
 	cli := &APIClient{
-		apiclient.New(transport(server.URL, ""), strfmt.Default),
+		apiclient.New(httptransport.New(uri.Host, "", []string{"http"}), strfmt.Default),
 		"test", "Test", uuid.NewV4().String(), "", "",
 	}
 	id, err := cli.GetServerByName(serverName)
@@ -106,8 +120,12 @@ func TestGetServerByID(t *testing.T) {
 	}
 	server := runServer(apiServer)
 	defer server.Close()
+	uri, err := url.Parse(server.URL)
+	if err != nil {
+		t.Error(err)
+	}
 	cli := &APIClient{
-		apiclient.New(transport(server.URL, ""), strfmt.Default),
+		apiclient.New(httptransport.New(uri.Host, "", []string{"http"}), strfmt.Default),
 		"test", "Test", uuid.NewV4().String(), "", "",
 	}
 	result, err := cli.GetServerByID(serverID)
