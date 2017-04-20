@@ -43,9 +43,11 @@ func fileListCommand() *cobra.Command {
 			cli := api.Client()
 			params := projects.NewProjectsFilesListParams()
 			ls.Apply(params)
-			ns := viper.GetString("namespace")
-			params.SetNamespace(ns)
-			projectID, err := getProjectIDByName(viper.GetString("project"))
+			params.SetNamespace(cli.Namespace)
+			projectID, err := cli.GetProjectID()
+			if err != nil {
+				return err
+			}
 			params.SetProjectPk(projectID)
 			resp, err := cli.Projects.ProjectsFilesList(params)
 			if err != nil {
@@ -68,12 +70,11 @@ func fileCreateCmd() *cobra.Command {
 		Short: "Create file",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cli := api.Client()
-			projectID, err := getProjectIDByName(viper.GetString("project"))
+			projectID, err := cli.GetProjectID()
 			if err != nil {
 				return err
 			}
-			ns := viper.GetString("namespace")
-			user, err := getUserByName(ns)
+			user, err := getUserByName(cli.Namespace)
 			if err != nil {
 				return err
 			}
@@ -84,7 +85,7 @@ func fileCreateCmd() *cobra.Command {
 			encoding := "utf-8"
 			body.Encoding = &encoding
 			params := projects.NewProjectsFilesCreateParams()
-			params.SetNamespace(ns)
+			params.SetNamespace(cli.Namespace)
 			params.SetProjectPk(projectID)
 			params.SetData(body)
 			resp, err := cli.Projects.ProjectsFilesCreate(params)
@@ -102,8 +103,7 @@ func fileCreateCmd() *cobra.Command {
 func getFileByName(name, projectID string) (*models.File, error) {
 	cli := api.Client()
 	params := projects.NewProjectsFilesListParams()
-	ns := viper.GetString("namespace")
-	params.SetNamespace(ns)
+	params.SetNamespace(cli.Namespace)
 	params.SetProjectPk(projectID)
 	params.SetPath(&name)
 	resp, err := cli.Projects.ProjectsFilesList(params)
@@ -122,10 +122,10 @@ func fileDeleteCmd() *cobra.Command {
 		Use:   "delete",
 		Short: "Delete file",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			cli := api.Client()
 			params := projects.NewProjectsFilesDeleteParams()
-			ns := viper.GetString("namespace")
-			params.SetNamespace(ns)
-			projectID, err := getProjectIDByName(viper.GetString("project"))
+			params.SetNamespace(cli.Namespace)
+			projectID, err := cli.GetProjectID()
 			if err != nil {
 				return err
 			}
@@ -135,7 +135,6 @@ func fileDeleteCmd() *cobra.Command {
 				return err
 			}
 			params.SetID(file.ID)
-			cli := api.Client()
 			_, err = cli.Projects.ProjectsFilesDelete(params)
 			if err != nil {
 				return err
@@ -155,12 +154,11 @@ func fileUploadCmd() *cobra.Command {
 		Short: "Upload files",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cli := api.Client()
-			projectID, err := getProjectIDByName(viper.GetString("project"))
+			projectID, err := cli.GetProjectID()
 			if err != nil {
 				return err
 			}
-			ns := viper.GetString("namespace")
-			user, err := getUserByName(ns)
+			user, err := getUserByName(cli.Namespace)
 			if err != nil {
 				return err
 			}
@@ -185,7 +183,7 @@ func fileUploadCmd() *cobra.Command {
 				encoded := base64.StdEncoding.EncodeToString(contentB)
 				body.Content = &encoded
 				params := projects.NewProjectsFilesCreateParams()
-				params.SetNamespace(ns)
+				params.SetNamespace(cli.Namespace)
 				params.SetProjectPk(projectID)
 				params.SetData(body)
 				_, err = cli.Projects.ProjectsFilesCreate(params)
