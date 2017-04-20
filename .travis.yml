@@ -8,3 +8,5 @@ branches:
 sudo: required
 script:
   - go test -v ./...
+notifications:
+  slack: 3blades:VAUPU0C8ex3xXGPn3LEA1nss

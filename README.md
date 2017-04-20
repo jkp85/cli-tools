@@ -1,4 +1,5 @@
-[![slack in](https://slackin-pypmyuhqds.now.sh/badge.svg)](https://slackin-pypmyuhqds.now.sh/)
+[![Build Status](https://travis-ci.org/3Blades/cli-tools.svg?branch=master)](https://travis-ci.org/3Blades/cli-tools)
+[![slack in](https://slackin-rkedwqasme.now.sh/badge.svg)](https://slackin-rkedwqasme.now.sh/)
 
 # Command Line Interface (CLI) Tools
 
@@ -69,7 +70,7 @@ For me it is `192.168.0.100:5000`.
 **Note 2:** You need to create a resources instance for your server to run. You can do it here:
 `http://localhost:5000/<username>/servers/options/resources/`. Keep your created resource id, because we will use it later.
 
-**Note 3:** You will need your api token in order to make requests to model server. After you login to api with this cli tools, you can find your token inside a file `.threeblades.token` in the same directory as your config file. 
+**Note 3:** You will need your api token in order to make requests to model server. After you login to api with this cli tools, you can find your token inside a file `.threeblades.token` in the same directory as your config file.
 
 ### Notebook
 
