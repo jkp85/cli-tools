@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/3Blades/cli-tools.svg?branch=master)](https://travis-ci.org/3Blades/cli-tools)
-[![slack in](https://slackin-rkedwqasme.now.sh/badge.svg)](https://slackin-rkedwqasme.now.sh/)
+[![slack in](https://slack.3blades.io/badge.svg)](https://slack.3blades.io)
 
 # Command Line Interface (CLI) Tools
 
