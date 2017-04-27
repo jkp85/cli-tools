@@ -63,9 +63,8 @@ type ServerConfig struct {
 
 func serverCreateCmd() *cobra.Command {
 	body := projects.ProjectsServersCreateBody{
-		Name:                 new(string),
-		EnvironmentResources: new(string),
-		Connected:            []string{},
+		Name:      new(string),
+		Connected: []string{},
 	}
 	bodyConf := &ServerConfig{}
 	cmd := &cobra.Command{
@@ -91,7 +90,7 @@ func serverCreateCmd() *cobra.Command {
 	}
 	cmd.Flags().StringVar(body.Name, "name", "", "Server name")
 	cmd.Flags().StringVar(&body.ImageName, "image", "", "Server image")
-	cmd.Flags().StringVar(body.EnvironmentResources, "resources", "", "Server resources")
+	cmd.Flags().StringVar(&body.EnvironmentResources, "resources", "", "Server resources")
 	cmd.Flags().StringVar(&body.StartupScript, "startup-script", "", "Server startup script")
 	cmd.Flags().StringVar(&bodyConf.Function, "function", "", "Function to run")
 	cmd.Flags().StringVar(&bodyConf.Script, "script", "", "Script to run")
