@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/3Blades/cli-tools/tbs/api"
@@ -54,7 +55,7 @@ func projectListCmd() *cobra.Command {
 		},
 	}
 	lf.Set(cmd)
-	cmd.Flags().Var(filters, "filter", "Filter results")
+	cmd.Flags().Var(filters, "filter", "Filter results (ex. --filter name=test)")
 	cmd.PersistentFlags().StringP("format", "f", "json", "Output format")
 	viper.BindPFlag("project_format", cmd.PersistentFlags().Lookup("format"))
 	return cmd
@@ -92,7 +93,7 @@ func projectCreateCmd() *cobra.Command {
 	cmd.Flags().StringVar(body.Name, "name", "", "Project name")
 	cmd.Flags().StringVar(&body.Description, "description", "", "Project description")
 	cmd.Flags().BoolVar(&body.Private, "privacy", false, "Should this project be private?")
-	cmd.Flags().StringSliceVar(&members, "members", []string{}, "Project members")
+	cmd.Flags().StringSliceVar(&members, "members", []string{}, "Project members (comma separated)")
 	return cmd
 }
 
@@ -102,6 +103,9 @@ func projectDeleteCmd() *cobra.Command {
 		Use:   "delete",
 		Short: "Delete project",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if projectName == "" && projectID == "" {
+				return errors.New("You must specify project name or id")
+			}
 			confirm, err := readStdin(
 				fmt.Sprintf("Are you sure you want to delete project '%s'? (Y/n): ", projectName))
 			if err != nil {
@@ -166,12 +170,13 @@ func addUserToProjectCmd() *cobra.Command {
 
 func addMembers(projectID string, members ...string) error {
 	cli := api.Client()
+	log.Println(members)
 	for _, member := range members {
 		params := projects.NewProjectsCollaboratorsCreateParams()
 		params.SetNamespace(cli.Namespace)
 		data := projects.ProjectsCollaboratorsCreateBody{
-			Owner: false,
-			Email: &member,
+			Owner:  false,
+			Member: &member,
 		}
 		params.SetProjectPk(projectID)
 		params.SetData(data)
@@ -195,7 +200,7 @@ func projectUpdateCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cli := api.Client()
 			var err error
-			if updateBody.Name == "" || projectID == "" {
+			if updateBody.Name == "" && projectID == "" {
 				return errors.New("You must provide either project name or id")
 			}
 			if projectID == "" {

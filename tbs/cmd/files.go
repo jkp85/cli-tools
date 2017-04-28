@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
@@ -122,6 +123,9 @@ func fileDeleteCmd() *cobra.Command {
 		Use:   "delete",
 		Short: "Delete file",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if name == "" && fileID == "" {
+				return errors.New("You need to specify file name or id")
+			}
 			cli := api.Client()
 			params := projects.NewProjectsFilesDeleteParams()
 			params.SetNamespace(cli.Namespace)

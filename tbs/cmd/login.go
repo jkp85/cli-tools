@@ -61,10 +61,6 @@ func newLoginCmd() *cobra.Command {
 
 func init() {
 	RootCmd.AddCommand(newLoginCmd())
-	token, err := ioutil.ReadFile(tokenFilePath())
-	if err == nil {
-		viper.Set("token", token)
-	}
 }
 
 func readStdin(promptMsg string) (string, error) {
@@ -95,8 +91,7 @@ func getToken(server, username, password string) (string, error) {
 }
 
 func tokenFilePath() string {
-	configFilePath := viper.ConfigFileUsed()
-	return filepath.Join(filepath.Dir(configFilePath), ".threeblades.token")
+	return filepath.Join(filepath.Dir(viper.ConfigFileUsed()), ".threeblades.token")
 }
 
 func saveToken(token string) error {

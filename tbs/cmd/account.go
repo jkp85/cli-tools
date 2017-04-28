@@ -41,6 +41,26 @@ func accountCreateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create account",
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			msg := "You need to provide flags: "
+			raise := false
+			if *accountBody.Username == "" {
+				msg += "username"
+				raise = true
+			}
+			if *accountBody.Password == "" {
+				msg += ", password"
+				raise = true
+			}
+			if accountBody.Email == "" {
+				msg += ", email."
+				raise = true
+			}
+			if raise {
+				return errors.New(msg)
+			}
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cli := api.Client()
 			params := users.NewUsersCreateParams()
@@ -57,13 +77,13 @@ func accountCreateCmd() *cobra.Command {
 	flags := cmd.Flags()
 	flags.StringVar(&accountBody.FirstName, "first-name", "", "New account first name")
 	flags.StringVar(&accountBody.LastName, "last-name", "", "New account last name")
-	flags.StringVar(accountBody.Username, "username", "", "New account username")
-	flags.StringVar(accountBody.Password, "password", "", "New account password")
+	flags.StringVar(accountBody.Username, "username", "", "New account username (required)")
+	flags.StringVar(accountBody.Password, "password", "", "New account password (required)")
 	flags.StringVar(&accountBody.Profile.URL, "url", "", "New account url")
 	flags.StringVar(&accountBody.Profile.AvatarURL, "avatar-url", "", "New account avatar-url")
 	flags.StringVar(&accountBody.Profile.Bio, "bio", "", "New account bio")
 	flags.StringVar(&accountBody.Profile.Location, "location", "", "New account location")
-	flags.StringVar(&accountBody.Email, "email", "", "New account email")
+	flags.StringVar(&accountBody.Email, "email", "", "New account email (required)")
 	flags.StringVar(&accountBody.Profile.Company, "company", "", "New account company")
 	flags.StringVar(&accountBody.Profile.Timezone, "timezone", "", "New account timezone")
 	return cmd

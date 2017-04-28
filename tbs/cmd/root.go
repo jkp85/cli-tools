@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"io/ioutil"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -25,6 +26,8 @@ func Execute() {
 }
 
 func init() {
+	jww.SetLogThreshold(jww.LevelTrace)
+	jww.SetStdoutThreshold(jww.LevelInfo)
 	cobra.OnInitialize(initConfig)
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.threeblades.yaml)")
 	RootCmd.PersistentFlags().String("namespace", "", "3Blades namespace")
@@ -37,9 +40,9 @@ func initConfig() {
 		viper.SetConfigFile(cfgFile)
 	}
 
+	viper.AddConfigPath("$HOME")
 	viper.SetConfigName(".threeblades") // name of config file (without extension)
-	viper.AddConfigPath("$HOME")        // adding home directory as first search path
-	viper.AddConfigPath(".")
+	viper.SetConfigType("yaml")
 	viper.AutomaticEnv() // read in environment variables that match
 	viper.SetEnvPrefix("THREEBLADES")
 	viper.BindEnv("project")
@@ -48,5 +51,9 @@ func initConfig() {
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err != nil {
 		jww.ERROR.Printf("Error reading config file: %s\n", err)
+	}
+	token, err := ioutil.ReadFile(tokenFilePath())
+	if err == nil {
+		viper.Set("token", token)
 	}
 }
