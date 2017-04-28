@@ -8,5 +8,7 @@ branches:
 sudo: required
 script:
   - go test -v ./...
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
 notifications:
   slack: 3blades:VAUPU0C8ex3xXGPn3LEA1nss
