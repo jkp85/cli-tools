@@ -199,7 +199,7 @@ func serverStartCmd() *cobra.Command {
 				return err
 			}
 			params.SetProjectPk(projectID)
-			params.SetServerPk(serverID)
+			params.SetID(serverID)
 			_, err = cli.Projects.ProjectsServersStartCreate(params)
 			if err != nil {
 				return err
@@ -237,7 +237,7 @@ func serverStopCmd() *cobra.Command {
 				return err
 			}
 			params.SetProjectPk(projectID)
-			params.SetServerPk(serverID)
+			params.SetID(serverID)
 			_, err = cli.Projects.ProjectsServersStopCreate(params)
 			if err != nil {
 				return err
@@ -275,7 +275,7 @@ func serverTerminateCmd() *cobra.Command {
 				return err
 			}
 			params.SetProjectPk(projectID)
-			params.SetServerPk(serverID)
+			params.SetID(serverID)
 			_, err = cli.Projects.ProjectsServersTerminateCreate(params)
 			if err != nil {
 				return err

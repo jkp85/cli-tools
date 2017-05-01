@@ -5,6 +5,7 @@ import (
 
 	"github.com/3Blades/cli-tools/tbs/utils"
 	apiclient "github.com/3Blades/go-sdk/client"
+	"github.com/3Blades/go-sdk/client/hosts"
 	"github.com/3Blades/go-sdk/client/projects"
 	"github.com/3Blades/go-sdk/models"
 	httptransport "github.com/go-openapi/runtime/client"
@@ -99,6 +100,20 @@ func (c *APIClient) GetServerByID(serverID string) (*models.Server, error) {
 		return nil, err
 	}
 	return resp.Payload, nil
+}
+
+func (c *APIClient) GetHostIDByName(hostName string) (string, error) {
+	params := hosts.NewHostsListParams()
+	params.SetNamespace(c.Namespace)
+	params.SetName(&hostName)
+	resp, err := c.Hosts.HostsList(params)
+	if err != nil {
+		return "", err
+	}
+	if len(resp.Payload) < 1 {
+		return "", fmt.Errorf("There is no host with name: %s", hostName)
+	}
+	return resp.Payload[0].ID, nil
 }
 
 func Client() *APIClient {

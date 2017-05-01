@@ -31,6 +31,8 @@ func projectsCmd() *cobra.Command {
 		Use:   "project",
 		Short: "Handle projects",
 	}
+	cmd.PersistentFlags().StringP("format", "f", "json", "Output format")
+	viper.BindPFlag("project_format", cmd.PersistentFlags().Lookup("format"))
 	return cmd
 }
 
@@ -56,8 +58,6 @@ func projectListCmd() *cobra.Command {
 	}
 	lf.Set(cmd)
 	cmd.Flags().Var(filters, "filter", "Filter results (ex. --filter name=test)")
-	cmd.PersistentFlags().StringP("format", "f", "json", "Output format")
-	viper.BindPFlag("project_format", cmd.PersistentFlags().Lookup("format"))
 	return cmd
 }
 
