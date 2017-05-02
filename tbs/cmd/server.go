@@ -96,6 +96,7 @@ func serverCreateCmd() *cobra.Command {
 	cmd.Flags().StringVar(&bodyConf.Script, "script", "", "Script to run")
 	cmd.Flags().StringVar(&bodyConf.Command, "command", "", "Command to run")
 	cmd.Flags().StringVar(&bodyConf.Type, "type", "", "Server type [restful,cron,jupyter]")
+	cmd.Flags().StringVar(&body.Host, "host", "", "Host id to run server on.")
 	return cmd
 }
 

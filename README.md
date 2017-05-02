@@ -179,3 +179,12 @@ You should get a response similar to this:
 ```
 {"schema_version":"0.1","model_version":"1.0","timestamp":"2017-04-05T13:09:00.052713946Z","status":"ok","execution_time":62,"data":[[0.5022257566452026],[0.5014487504959106]]}
 ```
+
+## Bring your own node
+
+In order to connect to your own node you need to install there docker engine and set it up to listen on a port.
+After that you need run command:
+
+	tbs host create --name HostName --ip "<your_host_ip>" --port 2375
+
+Then you will be able to run your servers on your own node.
