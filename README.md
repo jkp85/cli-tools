@@ -57,7 +57,7 @@ CLI are looking for config file in your home directory. Default config file can 
 
 Currently supported options are:
 
-	root: localhost:5000 // api root
+	root: http://localhost:5000 // api root
 
 ## Workflow
 
