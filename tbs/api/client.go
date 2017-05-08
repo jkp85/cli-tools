@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"net/url"
 
 	"github.com/3Blades/cli-tools/tbs/utils"
 	apiclient "github.com/3Blades/go-sdk/client"
@@ -129,7 +130,11 @@ func Client() *APIClient {
 }
 
 func transport(apiRoot, token string) *httptransport.Runtime {
-	tr := httptransport.New(apiRoot, "", []string{"http", "https"})
+	root, err := url.Parse(apiRoot)
+	if err != nil {
+		jww.FATAL.Fatal(err)
+	}
+	tr := httptransport.New(root.Host, "", []string{root.Scheme})
 	if token != "" {
 		tr.DefaultAuthentication = httptransport.APIKeyAuth("AUTHORIZATION", "header", "Token "+token)
 	}
