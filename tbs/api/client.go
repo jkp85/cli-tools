@@ -11,6 +11,7 @@ import (
 	"github.com/3Blades/go-sdk/models"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
+	jww "github.com/spf13/jwalterweatherman"
 	"github.com/spf13/viper"
 )
 
