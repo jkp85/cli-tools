@@ -307,21 +307,24 @@ func serverLogsCmd() *cobra.Command {
 				return errors.New("You have to specify server id or name")
 			}
 			cli := api.Client()
+			var server *models.Server
+			var err error
 			if serverID == "" {
-				server, err := cli.GetServerByName(name)
-				if err != nil {
-					return err
-				}
-				serverID = server.ID
-				logsURL = server.LogsURL
+				server, err = cli.GetServerByName(name)
+			} else {
+				server, err = cli.GetServerByID(serverID)
 			}
+			if err != nil {
+				return err
+			}
+			serverID = server.ID
+			logsURL = server.LogsURL
 			interrupt := make(chan os.Signal, 1)
 			signal.Notify(interrupt, os.Interrupt)
 			ws, err := url.Parse(logsURL)
 			if err != nil {
 				return err
 			}
-			ws.Scheme = "ws"
 			header := make(http.Header)
 			header.Add("Origin", viper.GetString("root"))
 			c, _, err := websocket.DefaultDialer.Dial(ws.String(), header)
