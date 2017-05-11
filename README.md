@@ -188,3 +188,11 @@ After that you need run command:
 	tbs host create --name HostName --ip "<your_host_ip>" --port 2375
 
 Then you will be able to run your servers on your own node.
+
+## Server logs
+
+To stream server logs please use this command:
+
+	tbs server logs --name <server_name>
+
+Ctrl-C to interrupt stream.
