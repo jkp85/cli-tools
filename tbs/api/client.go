@@ -137,7 +137,7 @@ func transport(apiRoot, token string) *httptransport.Runtime {
 	}
 	tr := httptransport.New(root.Host, "", []string{root.Scheme})
 	if token != "" {
-		tr.DefaultAuthentication = httptransport.APIKeyAuth("AUTHORIZATION", "header", "Token "+token)
+		tr.DefaultAuthentication = httptransport.APIKeyAuth("AUTHORIZATION", "header", "JWT "+token)
 	}
 	return tr
 }

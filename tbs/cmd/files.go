@@ -118,15 +118,14 @@ func getFileByName(name, projectID string) (*models.File, error) {
 }
 
 func fileDeleteCmd() *cobra.Command {
-	var name, fileID string
 	cmd := &cobra.Command{
-		Use:   "delete",
+		Use:   "delete [names or ids...]",
 		Short: "Delete file",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if name == "" && fileID == "" {
-				return errors.New("You need to specify file name or id")
-			}
 			cli := api.Client()
+			if len(args) == 0 {
+				return errors.New("You must provide at least one name or id")
+			}
 			params := projects.NewProjectsFilesDeleteParams()
 			params.SetNamespace(cli.Namespace)
 			projectID, err := cli.GetProjectID()
@@ -134,21 +133,24 @@ func fileDeleteCmd() *cobra.Command {
 				return err
 			}
 			params.SetProjectPk(projectID)
-			file, err := getFileByName(name, projectID)
-			if err != nil {
-				return err
+			for _, arg := range args {
+				if !utils.IsUUID(arg) {
+					file, err := getFileByName(arg, projectID)
+					if err != nil {
+						jww.FEEDBACK.Printf("There is no file with name %s", arg)
+					}
+					arg = file.ID
+				}
+				params.SetID(arg)
+				_, err = cli.Projects.ProjectsFilesDelete(params)
+				if err != nil {
+					jww.FEEDBACK.Println(err)
+				}
+				jww.FEEDBACK.Printf("File %s deleted\n", arg)
 			}
-			params.SetID(file.ID)
-			_, err = cli.Projects.ProjectsFilesDelete(params)
-			if err != nil {
-				return err
-			}
-			jww.FEEDBACK.Println("File deleted")
 			return nil
 		},
 	}
-	cmd.Flags().StringVar(&name, "name", "", "File name/path")
-	cmd.Flags().StringVar(&fileID, "uuid", "", "File id")
 	return cmd
 }
 
