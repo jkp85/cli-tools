@@ -2,11 +2,17 @@ package cmd
 
 import (
 	"errors"
+	"net/http"
+	"net/url"
+	"os"
+	"os/signal"
+	"time"
 
 	"github.com/3Blades/cli-tools/tbs/api"
 	"github.com/3Blades/cli-tools/tbs/utils"
 	"github.com/3Blades/go-sdk/client/projects"
 	"github.com/3Blades/go-sdk/models"
+	"github.com/gorilla/websocket"
 	"github.com/spf13/cobra"
 	jww "github.com/spf13/jwalterweatherman"
 	"github.com/spf13/viper"
@@ -22,6 +28,7 @@ func init() {
 		serverStartCmd(),
 		serverStopCmd(),
 		serverTerminateCmd(),
+		serverLogsCmd(),
 	)
 	RootCmd.AddCommand(cmd)
 }
@@ -282,6 +289,73 @@ func serverTerminateCmd() *cobra.Command {
 				return err
 			}
 			jww.FEEDBACK.Println("Server terminated")
+			return nil
+		},
+	}
+	cmd.Flags().StringVar(&name, "name", "", "Server name")
+	cmd.Flags().StringVar(&serverID, "uuid", "", "Server id")
+	return cmd
+}
+
+func serverLogsCmd() *cobra.Command {
+	var name, serverID, logsURL string
+	cmd := &cobra.Command{
+		Use:   "logs",
+		Short: "Server logs",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if serverID == "" && name == "" {
+				return errors.New("You have to specify server id or name")
+			}
+			cli := api.Client()
+			var server *models.Server
+			var err error
+			if serverID == "" {
+				server, err = cli.GetServerByName(name)
+			} else {
+				server, err = cli.GetServerByID(serverID)
+			}
+			if err != nil {
+				return err
+			}
+			serverID = server.ID
+			logsURL = server.LogsURL
+			interrupt := make(chan os.Signal, 1)
+			signal.Notify(interrupt, os.Interrupt)
+			ws, err := url.Parse(logsURL)
+			if err != nil {
+				return err
+			}
+			header := make(http.Header)
+			header.Add("Origin", viper.GetString("root"))
+			c, _, err := websocket.DefaultDialer.Dial(ws.String(), header)
+			if err != nil {
+				return err
+			}
+			defer c.Close()
+			done := make(chan struct{})
+			go func() {
+				defer c.Close()
+				defer close(done)
+
+				for {
+					_, message, err := c.ReadMessage()
+					if err != nil {
+						return
+					}
+					jww.FEEDBACK.Println(string(message))
+				}
+			}()
+			for {
+				select {
+				case <-interrupt:
+					select {
+					case <-done:
+					case <-time.After(time.Second):
+					}
+					c.Close()
+					return nil
+				}
+			}
 			return nil
 		},
 	}
