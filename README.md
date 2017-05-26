@@ -67,16 +67,13 @@ An example will use tensorflow and keras for modelling.
 [http://localhost:5000/admin/sites/site/](http://localhost:5000/admin/sites/site/) It needs to be set with port.
 For me it is `192.168.0.100:5000`.
 
-**Note 2:** You need to create a resources instance for your server to run. You can do it here:
-`http://localhost:5000/<username>/servers/options/resources/`. Keep your created resource id, because we will use it later.
-
-**Note 3:** You will need your api token in order to make requests to model server. After you login to api with this cli tools, you can find your token inside a file `$HOME/.threeblades.token`.
+**Note 2:** You will need your api token in order to make requests to model server. After you login to api with this cli tools, you can find your token inside a file `$HOME/.threeblades.token`.
 
 ### Notebook
 
 Create notebook:
 
-	tbs server create --name keras_cpu --image keras --resources <resources_uuid> --type jupyter
+	tbs server create --name keras_cpu --image keras --type jupyter
 
 Start notebook:
 
@@ -145,12 +142,12 @@ def load_model():
 
 
 def main(json_data):
-	"""
+    """
     Example json_data:
-	{
+    {
         "X": [[6,148,72,35,0,33.6,0.627,50], [1,85,66,29,0,26.6,0.351,31]]
-	}
-	"""
+    }
+    """
     data = json.loads(json_data)
     model = load_model()
     X = numpy.asarray(data["X"])

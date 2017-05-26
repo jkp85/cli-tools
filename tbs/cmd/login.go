@@ -40,7 +40,7 @@ func newLoginCmd() *cobra.Command {
 					return err
 				}
 			}
-			token, err := getToken("localhost:5000", username, password)
+			token, err := getToken(username, password)
 			if err != nil {
 				return err
 			}
@@ -76,14 +76,14 @@ func readPassword() (string, error) {
 	return strings.TrimSpace(string(bytePassword)), err
 }
 
-func getToken(server, username, password string) (string, error) {
+func getToken(username, password string) (string, error) {
 	cli := api.Client()
-	params := auth.NewAuthSimpleTokenAuthCreateParams()
-	params.SetData(auth.AuthSimpleTokenAuthCreateBody{
+	params := auth.NewAuthJwtTokenAuthCreateParams()
+	params.SetData(auth.AuthJwtTokenAuthCreateBody{
 		Username: &username,
 		Password: &password,
 	})
-	resp, err := cli.Auth.AuthSimpleTokenAuthCreate(params)
+	resp, err := cli.Auth.AuthJwtTokenAuthCreate(params)
 	if err != nil {
 		return "", err
 	}
