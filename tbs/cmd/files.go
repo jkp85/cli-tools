@@ -13,7 +13,6 @@ import (
 	"github.com/3Blades/go-sdk/models"
 	"github.com/spf13/cobra"
 	jww "github.com/spf13/jwalterweatherman"
-	"github.com/spf13/viper"
 )
 
 func init() {
@@ -30,8 +29,8 @@ func fileCmd() *cobra.Command {
 		Use:   "file",
 		Short: "File management",
 	}
-	cmd.PersistentFlags().String("format", "json", "Output format")
-	viper.BindPFlag("file_format", cmd.PersistentFlags().Lookup("format"))
+	// cmd.PersistentFlags().String("format", "json", "Output format")
+	// viper.BindPFlag("file_format", cmd.PersistentFlags().Lookup("format"))
 	return cmd
 }
 
