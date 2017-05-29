@@ -112,6 +112,19 @@ func getUserByName(username string) (*models.User, error) {
 	return resp.Payload[0], nil
 }
 
+func getUserByEmail(email string) (*models.User, error) {
+	cli := api.Client()
+	ns := viper.GetString("namespace")
+	params := users.NewUsersListParams()
+	params.SetNamespace(ns)
+	params.SetEmail(&email)
+	resp, err := cli.Users.UsersList(params)
+	if err != nil {
+		return &models.User{}, err
+	}
+	return resp.Payload[0], nil
+}
+
 func accountDescribeCmd() *cobra.Command {
 	var username, userID string
 	cmd := &cobra.Command{
@@ -185,8 +198,11 @@ func accountDeleteCmd() *cobra.Command {
 			params := users.NewUsersDeleteParams()
 			ns := viper.GetString("namespace")
 			params.SetNamespace(ns)
-			if userID == "" {
+			if name != "" {
 				user, err = getUserByName(name)
+				userID = user.ID
+			} else if email != "" {
+				user, err = getUserByEmail(email)
 				userID = user.ID
 			} else {
 				user, err = getUserByID(userID)
