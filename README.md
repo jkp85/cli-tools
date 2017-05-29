@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/3Blades/cli-tools.svg?branch=master)](https://travis-ci.org/3Blades/cli-tools)
+[![Build status](https://ci.appveyor.com/api/projects/status/im1ypes6cbo331xg?svg=true)](https://ci.appveyor.com/project/jgwerner/cli-tools)
 [![slack in](https://slack.3blades.io/badge.svg)](https://slack.3blades.io)
 
 # Command Line Interface (CLI) Tools

@@ -1,0 +1,21 @@
+version: 1.0.{build}
+
+build:
+  verbosity: minimal
+
+clone_folder: c:\gopath\src\github.com\3blades\cli-tools
+
+environment:
+  GOPATH: c:\gopath
+  GOVERSION: 1.8.3
+
+install:
+  - echo %PATH%
+  - echo %GOPATH%
+  - set PATH=%GOPATH%\bin;c:\go\bin;%PATH%
+  - go version
+  - go env
+  - go get -v -t ./...
+
+build_script:
+  - go test -v ./...
