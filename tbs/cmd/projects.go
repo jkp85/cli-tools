@@ -64,8 +64,9 @@ func projectListCmd() *cobra.Command {
 func projectCreateCmd() *cobra.Command {
 	var members []string
 	body := projects.ProjectsCreateBody{
-		Name:    new(string),
-		Private: false,
+		Name:          new(string),
+		Private:       false,
+		Collaborators: []string{},
 	}
 	cmd := &cobra.Command{
 		Use:   "create",
