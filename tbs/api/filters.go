@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -26,9 +27,15 @@ func (f *filter) String() string {
 
 func (f *filter) Set(val string) error {
 	ss := strings.Split(val, ",")
+	if len(ss) < 1 {
+		return errors.New("Provide at least one error")
+	}
 	out := make(map[string]string, len(ss))
 	for _, d := range ss {
 		f := strings.Split(d, "=")
+		if len(f) < 2 {
+			return errors.New("Filter should be like 'name=Test'")
+		}
 		out[f[0]] = f[1]
 	}
 	if !f.changed {
