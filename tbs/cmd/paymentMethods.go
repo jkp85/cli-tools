@@ -12,6 +12,7 @@ import ("strconv"
 	"github.com/stripe/stripe-go/token"
 	"strings"
 	"os"
+	"github.com/3Blades/go-sdk/models"
 )
 
 
@@ -21,13 +22,14 @@ func init(){
 	               billingCreateCardCmd(),
 	               billingDescribeCardCmd(),
 		       billingUpdateCardCmd(),
-		       billingDeleteCardCmd())
+		       billingDeleteCardCmd(),
+	               billingSetDefaultCardCmd())
 	RootCmd.AddCommand(cmd)
 }
 
 func billingCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "cc",
+		Use: "billing",
 		Short: "Handle Credit Cards",
 	}
 	cmd.PersistentFlags().StringP("format", "f", "json", "Output format")
@@ -205,5 +207,59 @@ func billingDeleteCardCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&cardID, "uuid", "", "Card UUID")
+	return cmd
+}
+
+func getCustomerByUser(username string) (*models.Customer, error) {
+	// user, err := getUserByName(username)
+	// if err != nil {
+	// 	return err
+	// }
+
+	cli := api.Client()
+	namespace := viper.GetString("namespace")
+	params := billing.NewBillingCustomersListParams()
+	params.SetNamespace(namespace)
+	resp, err := cli.Billing.BillingCustomersList(params)
+
+	if err != nil {
+		return &models.Customer{}, err
+	}
+
+	return resp.Payload[0], nil
+
+}
+
+
+func billingSetDefaultCardCmd() *cobra.Command {
+	updateBody := billing.BillingCustomersPartialUpdateBody{}
+	cmd := &cobra.Command{
+		Use: "set-default",
+		Short: "Set your default payment method.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cli := api.Client()
+			params := billing.NewBillingCustomersPartialUpdateParams()
+			params.SetNamespace(cli.Namespace)
+
+			customer, err := getCustomerByUser(cli.Namespace)
+
+			if err != nil {
+				return err
+			}
+
+			params.SetID(customer.ID)
+			params.SetData(updateBody)
+
+			resp, err := cli.Billing.BillingCustomersPartialUpdate(params)
+
+			if err != nil {
+				return err
+			}
+
+			jww.FEEDBACK.Println("Default Payment Source Set.")
+			return api.Render("billing_format", resp.Payload)
+		},
+	}
+	cmd.Flags().StringVar(&updateBody.DefaultSource, "uuid", "", "Card ID")
 	return cmd
 }
