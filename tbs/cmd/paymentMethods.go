@@ -23,7 +23,8 @@ func init(){
 	               billingDescribeCardCmd(),
 		       billingUpdateCardCmd(),
 		       billingDeleteCardCmd(),
-	               billingSetDefaultCardCmd())
+	               billingSetDefaultCardCmd(),
+	               billingCreateCardInteractiveCmd())
 	RootCmd.AddCommand(cmd)
 }
 
@@ -179,7 +180,7 @@ func billingUpdateCardCmd() *cobra.Command{
 func billingDeleteCardCmd() *cobra.Command {
 	var cardID string
 	cmd := &cobra.Command{
-		Use: "delete",
+		Use: "rm",
 		Short: "Delete a credit card.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			confirm, err := readStdin(fmt.Sprint("Are you sure you want to delete this card? (Y/n): "))
@@ -210,11 +211,115 @@ func billingDeleteCardCmd() *cobra.Command {
 	return cmd
 }
 
-func getCustomerByUser(username string) (*models.Customer, error) {
-	// user, err := getUserByName(username)
-	// if err != nil {
-	// 	return err
-	// }
+func billingCreateCardInteractiveCmd() *cobra.Command {
+	body := billing.BillingCardsCreateBody{}
+	cmd := &cobra.Command{
+		Use: "add",
+		Short: "Add a credit card.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name, err := readStdin("Cardholder Name:")
+			if err != nil {
+				return err
+			}
+			body.Name = name
+
+			number, err := readStdin("Card Number:")
+			if err != nil {
+				return err
+			}
+			body.Number = number
+
+			var expMonth int64
+
+			fmt.Println("Expiry Month:")
+			fmt.Scan(&expMonth)
+			body.ExpMonth = expMonth
+
+			var expYear int64
+
+			fmt.Println("Expiry Year:")
+			fmt.Scan(&expYear)
+			body.ExpYear = expYear
+
+			Cvc, err := readStdin("CVC: ")
+			if err != nil {
+				return err
+			}
+			body.Cvc = Cvc
+
+			address1, err := readStdin("Address Line 1: ")
+			if err != nil {
+				return err
+			}
+			body.AddressLine1 = address1
+
+			address2, err := readStdin("Address Line 2: ")
+			if err != nil {
+				return err
+			}
+			body.AddressLine2 = address2
+
+			city, err := readStdin("City: ")
+			if err != nil {
+				return err
+			}
+			body.AddressCity = city
+
+			state, err := readStdin("State: ")
+			if err != nil {
+				return err
+			}
+			body.AddressState = state
+
+			zip, err := readStdin("Zip Code: ")
+			if err != nil {
+				return err
+			}
+			body.AddressZip = zip
+
+			country, err := readStdin("Country: ")
+			if err != nil {
+				return err
+			}
+			body.AddressCountry = country
+
+			stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
+
+			tkn, err := token.New(&stripe.TokenParams{
+					Card: &stripe.CardParams{
+						Number: body.Number,
+						Month: strconv.FormatInt(body.ExpMonth, 10),
+						Year: strconv.FormatInt(body.ExpYear, 10),
+						CVC: body.Cvc,
+						City: body.AddressCity,
+						Country: body.AddressCountry,
+						Address1: body.AddressLine1,
+						Address2: body.AddressLine2,
+						State: body.AddressState,
+						Zip: body.AddressZip,
+						Name: body.Name,
+						},
+			})
+
+			cli := api.Client()
+			params := billing.NewBillingCardsCreateParams()
+			params.SetNamespace(cli.Namespace)
+			body := billing.BillingCardsCreateBody{
+				Token: tkn.ID,
+			}
+			params.SetData(body)
+
+			resp, err := cli.Billing.BillingCardsCreate(params)
+
+			jww.FEEDBACK.Println("Card added")
+			return api.Render("billing_format", resp.Payload)
+		},
+	}
+
+	return cmd
+}
+
+func getCustomerByUser() (*models.Customer, error) {
 
 	cli := api.Client()
 	namespace := viper.GetString("namespace")
@@ -241,7 +346,7 @@ func billingSetDefaultCardCmd() *cobra.Command {
 			params := billing.NewBillingCustomersPartialUpdateParams()
 			params.SetNamespace(cli.Namespace)
 
-			customer, err := getCustomerByUser(cli.Namespace)
+			customer, err := getCustomerByUser()
 
 			if err != nil {
 				return err
