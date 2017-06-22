@@ -13,6 +13,9 @@ import (
 
 func Render(formatName string, target interface{}) error {
 	format := viper.GetString(formatName)
+	if format == "" {
+		format = "json"
+	}
 	renderer := NewRenderer(format, target)
 	return renderer.Render(os.Stdout)
 }
