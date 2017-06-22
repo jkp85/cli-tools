@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/3Blades/cli-tools/tbs/api"
 	"github.com/3Blades/go-sdk/client/users"
@@ -107,9 +108,12 @@ func getUserByName(username string) (*models.User, error) {
 	params.SetUsername(&username)
 	resp, err := cli.Users.UsersList(params)
 	if err != nil {
-		return &models.User{}, err
+		return nil, err
 	}
-	return resp.Payload[0], nil
+	if len(resp.Payload) > 0 {
+		return resp.Payload[0], nil
+	}
+	return nil, fmt.Errorf("There is no user with username: %s", username)
 }
 
 func getUserByEmail(email string) (*models.User, error) {
@@ -120,9 +124,12 @@ func getUserByEmail(email string) (*models.User, error) {
 	params.SetEmail(&email)
 	resp, err := cli.Users.UsersList(params)
 	if err != nil {
-		return &models.User{}, err
+		return nil, err
 	}
-	return resp.Payload[0], nil
+	if len(resp.Payload) > 0 {
+		return resp.Payload[0], nil
+	}
+	return nil, fmt.Errorf("There is no user with email: %s", email)
 }
 
 func accountDescribeCmd() *cobra.Command {
@@ -200,20 +207,15 @@ func accountDeleteCmd() *cobra.Command {
 			params.SetNamespace(ns)
 			if name != "" {
 				user, err = getUserByName(name)
-				userID = user.ID
 			} else if email != "" {
 				user, err = getUserByEmail(email)
-				userID = user.ID
 			} else {
 				user, err = getUserByID(userID)
-				if name != "" && *user.Username != name {
-					return errors.New("Provided username is not this user username")
-				}
 			}
-			if user.Email != email {
-				return errors.New("Provided email is not this user email")
+			if err != nil {
+				return err
 			}
-			params.SetID(userID)
+			params.SetID(user.ID)
 			_, err = cli.Users.UsersDelete(params)
 			if err != nil {
 				return err
