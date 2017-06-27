@@ -3,7 +3,6 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/3Blades/cli-tools/tbs/api"
@@ -171,7 +170,6 @@ func addUserToProjectCmd() *cobra.Command {
 
 func addMembers(projectID string, members ...string) error {
 	cli := api.Client()
-	log.Println(members)
 	for _, member := range members {
 		params := projects.NewProjectsCollaboratorsCreateParams()
 		params.SetNamespace(cli.Namespace)
@@ -183,7 +181,13 @@ func addMembers(projectID string, members ...string) error {
 		params.SetData(data)
 		_, err := cli.Projects.ProjectsCollaboratorsCreate(params)
 		if err != nil {
-			jww.ERROR.Printf("Error adding memeber: %s\n", member)
+			if nerr, ok := err.(*projects.ProjectsCollaboratorsCreateBadRequest); ok {
+				for _, msg := range nerr.Payload.Member {
+					jww.ERROR.Print(msg)
+				}
+			} else {
+				jww.ERROR.Printf("Error adding memeber: %s.", member)
+			}
 			continue
 		}
 		jww.FEEDBACK.Printf("Member added: %s\n", member)
