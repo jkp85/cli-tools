@@ -1,4 +1,7 @@
 # whitelist
+os:
+  - linux
+  - osx
 language: go
 go:
   - 1.8.3
