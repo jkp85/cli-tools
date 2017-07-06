@@ -1,3 +1,4 @@
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/960631824d444297870eb9d91dcafa2c)](https://www.codacy.com/app/3Blades/cli-tools?utm_source=github.com&utm_medium=referral&utm_content=3Blades/cli-tools&utm_campaign=badger)
 [![Build Status](https://travis-ci.org/3Blades/cli-tools.svg?branch=master)](https://travis-ci.org/3Blades/cli-tools)
 [![Build status](https://ci.appveyor.com/api/projects/status/im1ypes6cbo331xg?svg=true)](https://ci.appveyor.com/project/jgwerner/cli-tools)
 [![slack in](https://slack.3blades.io/badge.svg)](https://slack.3blades.io)
