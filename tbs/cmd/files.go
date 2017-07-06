@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
-
+	"strconv"
 	"github.com/3Blades/cli-tools/tbs/api"
 	"github.com/3Blades/cli-tools/tbs/utils"
 	"github.com/3Blades/go-sdk/client/projects"
@@ -17,6 +17,7 @@ import (
 	"bytes"
 	"io"
 	"github.com/spf13/viper"
+	"encoding/json"
 )
 
 func init() {
@@ -116,46 +117,73 @@ func fileDeleteCmd() *cobra.Command {
 }
 
 func newFileUploadRequest(uri string, params map[string]string, paramName, path string) (*http.Request, error){
-	abs, err := filepath.Abs(path)
-	if err != nil {
-		jww.ERROR.Printf("There was an error resolving path: %s\n", path)
-		return nil, err
-	}
-
-	localFile, err := os.Open(abs)
-	if err != nil {
-		jww.ERROR.Printf("There was an error opening file: %s\n", path)
-		return nil, err
-	}
-	defer localFile.Close()
-
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
-	part, err := writer.CreateFormFile(paramName, filepath.Base(abs))
-	if err != nil {
-		return nil, err
-	}
+	if paramName != "" {
+		abs, err := filepath.Abs(path)
+		if err != nil {
+			jww.ERROR.Printf("There was an error resolving path: %s\n", path)
+			return nil, err
+		}
 
-	_, err = io.Copy(part, localFile)
+		localFile, err := os.Open(abs)
+		if err != nil {
+			jww.ERROR.Printf("There was an error opening file: %s\n", path)
+			return nil, err
+		}
+		defer localFile.Close()
 
-	for key, val := range params {
+		part, err := writer.CreateFormFile(paramName, filepath.Base(abs))
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = io.Copy(part, localFile)
+
+		for key, val := range params {
 		_ = writer.WriteField(key, val)
-	}
 
-	err = writer.Close()
-	if err != nil {
-		return nil, err
+		}
+		err = writer.Close()
+		if err != nil {
+			return nil, err
+		}
+	} else{
+		jsonValue, _ := json.Marshal(params)
+		body = bytes.NewBuffer(jsonValue)
 	}
 
 	req, err := http.NewRequest("POST", uri, body)
-	req.Header.Set("Content-Type", writer.FormDataContentType())
+	if paramName != "" {
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+	} else {
+		req.Header.Set("Content-Type", "application/json")
+	}
 	token := viper.GetString("token")
 	req.Header.Set("AUTHORIZATION", "JWT " + token)
 
 	return req, err
 }
 
+func getFileUploadResponse(request *http.Request) (*bytes.Buffer, error){
+	client := &http.Client{}
+	resp, err := client.Do(request)
+	if err != nil {
+		return nil, err
+	}
+
+	body := &bytes.Buffer{}
+	_, err = body.ReadFrom(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	resp.Body.Close()
+	return body, nil
+}
+
 func fileUploadCmd() *cobra.Command {
+	uploadBody := projects.ProjectsProjectFilesCreateBody{}
 	cmd := &cobra.Command{
 		Use:   "upload [files]",
 		Short: "Upload files",
@@ -173,36 +201,47 @@ func fileUploadCmd() *cobra.Command {
 
 			extraParams := map[string]string{
 				"project": projectID,
-				"public": "false",
+				"public": strconv.FormatBool(uploadBody.Public),
+				"name": uploadBody.Name,
+				"path": uploadBody.Path,
+				"base64_data": uploadBody.Base64Data,
 			}
+			if len(args) > 0 {
+				for _, path := range args {
+					request, err := newFileUploadRequest(apiUrl, extraParams, "file", path)
 
+					if err != nil {
+						jww.ERROR.Printf("There was an error uploading file: %s\n", path)
+						continue
+					}
 
-			for _, path := range args {
-				request, err := newFileUploadRequest(apiUrl, extraParams, "file", path)
-
+					body, err := getFileUploadResponse(request)
+					if err != nil {
+						jww.ERROR.Printf("There was an error uploading file: %s\n", path)
+					}
+					fmt.Println(body)
+				}
+			} else{
+				request, err := newFileUploadRequest(apiUrl, extraParams, "", "")
 				if err != nil {
-					jww.ERROR.Printf("There was an error uploading file: %s\n", path)
-					continue
+					jww.ERROR.Printf("There was an error uploading file: %s\n", uploadBody.Name)
 				}
 
-				client := &http.Client{}
-				resp, err := client.Do(request)
+				body, err := getFileUploadResponse(request)
+
 				if err != nil {
-					jww.ERROR.Printf("There was an error uploading file: %s\n", path)
-					continue
+					jww.ERROR.Printf("There was an error uploading file: %s\n", uploadBody.Name)
 				}
 
-				body := &bytes.Buffer{}
-				_, err = body.ReadFrom(resp.Body)
-				if err != nil {
-					return err
-				}
-
-				resp.Body.Close()
 				fmt.Println(body)
 			}
 			return nil
 		},
 	}
+	flags := cmd.Flags()
+	flags.BoolVar(&uploadBody.Public, "public", true, "Should the file be public?")
+	flags.StringVar(&uploadBody.Name, "name", "", "The file's name, only to be used in conjunction with base64 data")
+	flags.StringVar(&uploadBody.Path, "path", "", "THe path, relative to the project's directory, the file will be saved in.")
+	flags.StringVar(&uploadBody.Base64Data, "base64_data", "", "")
 	return cmd
 }
