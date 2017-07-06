@@ -65,8 +65,6 @@ func accountCreateCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cli := api.Client()
 			params := users.NewUsersCreateParams()
-			ns := viper.GetString("namespace")
-			params.SetNamespace(ns)
 			params.SetData(accountBody)
 			resp, err := cli.Users.UsersCreate(params)
 			if err != nil {
@@ -92,19 +90,15 @@ func accountCreateCmd() *cobra.Command {
 
 func getUserByID(userID string) (*models.User, error) {
 	cli := api.Client()
-	ns := viper.GetString("namespace")
 	params := users.NewUsersReadParams()
 	params.SetID(userID)
-	params.SetNamespace(ns)
 	resp, err := cli.Users.UsersRead(params)
 	return resp.Payload, err
 }
 
 func getUserByName(username string) (*models.User, error) {
 	cli := api.Client()
-	ns := viper.GetString("namespace")
 	params := users.NewUsersListParams()
-	params.SetNamespace(ns)
 	params.SetUsername(&username)
 	resp, err := cli.Users.UsersList(params)
 	if err != nil {
@@ -118,9 +112,7 @@ func getUserByName(username string) (*models.User, error) {
 
 func getUserByEmail(email string) (*models.User, error) {
 	cli := api.Client()
-	ns := viper.GetString("namespace")
 	params := users.NewUsersListParams()
-	params.SetNamespace(ns)
 	params.SetEmail(&email)
 	resp, err := cli.Users.UsersList(params)
 	if err != nil {
@@ -167,8 +159,6 @@ func accountUpdateCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cli := api.Client()
 			params := users.NewUsersPartialUpdateParams()
-			ns := viper.GetString("namespace")
-			params.SetNamespace(ns)
 			params.SetData(accountBody)
 			params.SetID(userID)
 			resp, err := cli.Users.UsersPartialUpdate(params)
@@ -203,8 +193,6 @@ func accountDeleteCmd() *cobra.Command {
 			var err error
 			cli := api.Client()
 			params := users.NewUsersDeleteParams()
-			ns := viper.GetString("namespace")
-			params.SetNamespace(ns)
 			if name != "" {
 				user, err = getUserByName(name)
 			} else if email != "" {
