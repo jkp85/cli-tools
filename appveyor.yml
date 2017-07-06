@@ -19,7 +19,8 @@ install:
 
 build_script:
   - go test -v ./...
+
 notifications:
   - provider: Slack
-    incoming_webhook:
-      secure: https://hooks.slack.com/services/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
+    auth_token:
+      secure: rPf5OJhLmxRLGxH7z9u5Va6C
