@@ -9,6 +9,7 @@ import (
 	"github.com/3Blades/go-sdk/client/hosts"
 	"github.com/3Blades/go-sdk/client/projects"
 	"github.com/3Blades/go-sdk/models"
+	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 	jww "github.com/spf13/jwalterweatherman"
@@ -22,6 +23,7 @@ type APIClient struct {
 	projectID string
 	server    string
 	serverID  string
+	authInfo  runtime.ClientAuthInfoWriterFunc
 }
 
 func (c *APIClient) GetProjectIDByName(name string) (string, error) {
@@ -31,7 +33,7 @@ func (c *APIClient) GetProjectIDByName(name string) (string, error) {
 	params := projects.NewProjectsListParams()
 	params.SetNamespace(c.Namespace)
 	params.SetName(&name)
-	resp, err := c.Projects.ProjectsList(params)
+	resp, err := c.Projects.ProjectsList(params, c.authInfo)
 	if err != nil {
 		return "", err
 	}
@@ -61,8 +63,8 @@ func (c *APIClient) ListServers(ls *utils.ListFlags) ([]*models.Server, error) {
 	if err != nil {
 		return []*models.Server{}, err
 	}
-	params.SetProjectPk(projectID)
-	resp, err := c.Projects.ProjectsServersList(params)
+	params.SetProjectID(projectID)
+	resp, err := c.Projects.ProjectsServersList(params, c.authInfo)
 	if err != nil {
 		return []*models.Server{}, err
 	}
@@ -76,9 +78,9 @@ func (c *APIClient) GetServerByName(name string) (*models.Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	params.SetProjectPk(projectID)
+	params.SetProjectID(projectID)
 	params.SetName(&name)
-	resp, err := c.Projects.ProjectsServersList(params)
+	resp, err := c.Projects.ProjectsServersList(params, c.authInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -96,8 +98,8 @@ func (c *APIClient) GetServerByID(serverID string) (*models.Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	params.SetProjectPk(projectID)
-	resp, err := c.Projects.ProjectsServersRead(params)
+	params.SetProjectID(projectID)
+	resp, err := c.Projects.ProjectsServersRead(params, c.authInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +110,7 @@ func (c *APIClient) GetHostIDByName(hostName string) (string, error) {
 	params := hosts.NewHostsListParams()
 	params.SetNamespace(c.Namespace)
 	params.SetName(&hostName)
-	resp, err := c.Hosts.HostsList(params)
+	resp, err := c.Hosts.HostsList(params, c.authInfo)
 	if err != nil {
 		return "", err
 	}
@@ -119,7 +121,7 @@ func (c *APIClient) GetHostIDByName(hostName string) (string, error) {
 }
 
 func Client() *APIClient {
-	cli := apiclient.New(transport(viper.GetString("root"), viper.GetString("token")), strfmt.Default)
+	cli := apiclient.New(transport(viper.GetString("root")), strfmt.Default)
 	return &APIClient{
 		cli,
 		viper.GetString("namespace"),
@@ -127,17 +129,18 @@ func Client() *APIClient {
 		viper.GetString("projectID"),
 		viper.GetString("server"),
 		viper.GetString("serverID"),
+		authInfo,
 	}
 }
 
-func transport(apiRoot, token string) *httptransport.Runtime {
+func authInfo(req runtime.ClientRequest, reg strfmt.Registry) error {
+	return req.SetHeaderParam("AUTHORIZATION", fmt.Sprintf("Bearer: %s", viper.GetString("token")))
+}
+
+func transport(apiRoot string) *httptransport.Runtime {
 	root, err := url.Parse(apiRoot)
 	if err != nil {
 		jww.FATAL.Fatal(err)
 	}
-	tr := httptransport.New(root.Host, "", []string{root.Scheme})
-	if token != "" {
-		tr.DefaultAuthentication = httptransport.APIKeyAuth("AUTHORIZATION", "header", "JWT "+token)
-	}
-	return tr
+	return httptransport.New(root.Host, "", []string{root.Scheme})
 }
