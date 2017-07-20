@@ -1,28 +1,30 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"github.com/3Blades/cli-tools/tbs/utils"
-	"github.com/3Blades/cli-tools/tbs/api"
-	"github.com/3Blades/go-sdk/client/billing"
-	jww "github.com/spf13/jwalterweatherman"
 	"fmt"
 	"strings"
+
+	"github.com/3Blades/cli-tools/tbs/api"
+	"github.com/3Blades/cli-tools/tbs/utils"
+	"github.com/3Blades/go-sdk/client/billing"
+	"github.com/3Blades/go-sdk/models"
+	"github.com/spf13/cobra"
+	jww "github.com/spf13/jwalterweatherman"
+	"github.com/spf13/viper"
 )
 
 func init() {
 	cmd := subscriptionCmd()
 	cmd.AddCommand(subscriptionListCmd(),
-	               subscriptionCreateCmd(),
-	               subscriptionDescribeCmd(),
-	               subscriptionDeleteCmd())
+		subscriptionCreateCmd(),
+		subscriptionDescribeCmd(),
+		subscriptionDeleteCmd())
 	RootCmd.AddCommand(cmd)
 }
 
 func subscriptionCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "subscription",
+		Use:   "subscription",
 		Short: "Manage your subscriptions",
 	}
 	cmd.PersistentFlags().StringP("format", "f", "json", "Output format")
@@ -33,14 +35,14 @@ func subscriptionCmd() *cobra.Command {
 func subscriptionListCmd() *cobra.Command {
 	var lf utils.ListFlags
 	cmd := &cobra.Command{
-		Use: "ls",
+		Use:   "ls",
 		Short: "List Subscriptions",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cli := api.Client()
 			params := billing.NewBillingSubscriptionsListParams()
 			params.SetNamespace(cli.Namespace)
 			lf.Apply(params)
-			resp, err := cli.Billing.BillingSubscriptionsList(params)
+			resp, err := cli.Billing.BillingSubscriptionsList(params, cli.AuthInfo)
 			if err != nil {
 				return err
 			}
@@ -52,18 +54,18 @@ func subscriptionListCmd() *cobra.Command {
 }
 
 func subscriptionCreateCmd() *cobra.Command {
-	body := billing.BillingSubscriptionsCreateBody{
+	body := &models.SubscriptionData{
 		Plan: new(string),
 	}
 	cmd := &cobra.Command{
-		Use: "create",
+		Use:   "create",
 		Short: "Create new subscription",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cli := api.Client()
 			params := billing.NewBillingSubscriptionsCreateParams()
 			params.SetNamespace(cli.Namespace)
 			params.SetData(body)
-			resp, err := cli.Billing.BillingSubscriptionsCreate(params)
+			resp, err := cli.Billing.BillingSubscriptionsCreate(params, cli.AuthInfo)
 
 			if err != nil {
 				return err
@@ -80,7 +82,7 @@ func subscriptionDescribeCmd() *cobra.Command {
 	var subscriptionID string
 
 	cmd := &cobra.Command{
-		Use: "describe",
+		Use:   "describe",
 		Short: "Subscription Details",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cli := api.Client()
@@ -88,7 +90,7 @@ func subscriptionDescribeCmd() *cobra.Command {
 			params.SetNamespace(cli.Namespace)
 			params.SetID(subscriptionID)
 
-			resp, err := cli.Billing.BillingSubscriptionsRead(params)
+			resp, err := cli.Billing.BillingSubscriptionsRead(params, cli.AuthInfo)
 
 			if err != nil {
 				return err
@@ -105,7 +107,7 @@ func subscriptionDescribeCmd() *cobra.Command {
 func subscriptionDeleteCmd() *cobra.Command {
 	var subscriptionID string
 	cmd := &cobra.Command{
-		Use: "cancel",
+		Use:   "cancel",
 		Short: "Cancel a subscription",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			confirm, err := readStdin(fmt.Sprint("Are you sure you want to cancel this subscription? (Y/n): "))
@@ -123,7 +125,7 @@ func subscriptionDeleteCmd() *cobra.Command {
 			params.SetNamespace(cli.Namespace)
 			params.SetID(subscriptionID)
 
-			_, err = cli.Billing.BillingSubscriptionsDelete(params)
+			_, err = cli.Billing.BillingSubscriptionsDelete(params, cli.AuthInfo)
 
 			if err != nil {
 				return err

@@ -26,12 +26,12 @@ func triggerCmd() *cobra.Command {
 	return cmd
 }
 
-func createTrigger(body triggers.TriggersCreateBody) (*triggers.TriggersCreateCreated, error) {
+func createTrigger(body *models.TriggerData) (*triggers.TriggersCreateCreated, error) {
 	cli := api.Client()
 	params := triggers.NewTriggersCreateParams()
 	params.SetNamespace(cli.Namespace)
 	params.SetData(body)
-	return cli.Triggers.TriggersCreate(params)
+	return cli.Triggers.TriggersCreate(params, cli.AuthInfo)
 }
 
 type SlackWebhookConfig struct {
@@ -45,7 +45,7 @@ func sendSlackMessage() *cobra.Command {
 	whConf := &SlackWebhookConfig{
 		Username: "3blades-bot",
 	}
-	body := triggers.TriggersCreateBody{
+	body := &models.TriggerData{
 		Cause: &models.TriggerAction{
 			ActionName: new(string),
 			Method:     new(string),

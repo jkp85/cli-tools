@@ -12,6 +12,7 @@ import (
 
 	"github.com/3Blades/cli-tools/tbs/api"
 	"github.com/3Blades/go-sdk/client/auth"
+	"github.com/3Blades/go-sdk/models"
 	"github.com/spf13/cobra"
 	jww "github.com/spf13/jwalterweatherman"
 	"github.com/spf13/viper"
@@ -78,12 +79,12 @@ func readPassword() (string, error) {
 
 func getToken(username, password string) (string, error) {
 	cli := api.Client()
-	params := auth.NewAuthJwtTokenAuthCreateParams()
-	params.SetData(auth.AuthJwtTokenAuthCreateBody{
+	params := auth.NewAuthJwtTokenAuthParams()
+	params.SetData(&models.JWTData{
 		Username: &username,
 		Password: &password,
 	})
-	resp, err := cli.Auth.AuthJwtTokenAuthCreate(params)
+	resp, err := cli.Auth.AuthJwtTokenAuth(params)
 	if err != nil {
 		return "", err
 	}

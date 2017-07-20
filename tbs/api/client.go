@@ -23,7 +23,7 @@ type APIClient struct {
 	projectID string
 	server    string
 	serverID  string
-	authInfo  runtime.ClientAuthInfoWriterFunc
+	AuthInfo  runtime.ClientAuthInfoWriterFunc
 }
 
 func (c *APIClient) GetProjectIDByName(name string) (string, error) {
@@ -33,7 +33,7 @@ func (c *APIClient) GetProjectIDByName(name string) (string, error) {
 	params := projects.NewProjectsListParams()
 	params.SetNamespace(c.Namespace)
 	params.SetName(&name)
-	resp, err := c.Projects.ProjectsList(params, c.authInfo)
+	resp, err := c.Projects.ProjectsList(params, c.AuthInfo)
 	if err != nil {
 		return "", err
 	}
@@ -64,7 +64,7 @@ func (c *APIClient) ListServers(ls *utils.ListFlags) ([]*models.Server, error) {
 		return []*models.Server{}, err
 	}
 	params.SetProjectID(projectID)
-	resp, err := c.Projects.ProjectsServersList(params, c.authInfo)
+	resp, err := c.Projects.ProjectsServersList(params, c.AuthInfo)
 	if err != nil {
 		return []*models.Server{}, err
 	}
@@ -80,7 +80,7 @@ func (c *APIClient) GetServerByName(name string) (*models.Server, error) {
 	}
 	params.SetProjectID(projectID)
 	params.SetName(&name)
-	resp, err := c.Projects.ProjectsServersList(params, c.authInfo)
+	resp, err := c.Projects.ProjectsServersList(params, c.AuthInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (c *APIClient) GetServerByID(serverID string) (*models.Server, error) {
 		return nil, err
 	}
 	params.SetProjectID(projectID)
-	resp, err := c.Projects.ProjectsServersRead(params, c.authInfo)
+	resp, err := c.Projects.ProjectsServersRead(params, c.AuthInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func (c *APIClient) GetHostIDByName(hostName string) (string, error) {
 	params := hosts.NewHostsListParams()
 	params.SetNamespace(c.Namespace)
 	params.SetName(&hostName)
-	resp, err := c.Hosts.HostsList(params, c.authInfo)
+	resp, err := c.Hosts.HostsList(params, c.AuthInfo)
 	if err != nil {
 		return "", err
 	}
@@ -129,11 +129,11 @@ func Client() *APIClient {
 		viper.GetString("projectID"),
 		viper.GetString("server"),
 		viper.GetString("serverID"),
-		authInfo,
+		AuthInfo,
 	}
 }
 
-func authInfo(req runtime.ClientRequest, reg strfmt.Registry) error {
+func AuthInfo(req runtime.ClientRequest, reg strfmt.Registry) error {
 	return req.SetHeaderParam("AUTHORIZATION", fmt.Sprintf("Bearer: %s", viper.GetString("token")))
 }
 

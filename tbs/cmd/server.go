@@ -69,7 +69,7 @@ type ServerConfig struct {
 }
 
 func serverCreateCmd() *cobra.Command {
-	body := projects.ProjectsServersCreateBody{
+	body := &models.ServerData{
 		Name:      new(string),
 		Connected: []string{},
 	}
@@ -87,8 +87,8 @@ func serverCreateCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			params.SetProjectPk(projectID)
-			resp, err := cli.Projects.ProjectsServersCreate(params)
+			params.SetProjectID(projectID)
+			resp, err := cli.Projects.ProjectsServersCreate(params, cli.AuthInfo)
 			if err != nil {
 				return err
 			}
@@ -137,7 +137,7 @@ func serverDescribeCmd() *cobra.Command {
 
 func serverUpdateCmd() *cobra.Command {
 	var serverID string
-	body := projects.ProjectsServersPartialUpdateBody{
+	body := &models.ServerData{
 		Connected: []string{},
 	}
 	bodyConf := &ServerConfig{}
@@ -147,10 +147,10 @@ func serverUpdateCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			body.Config = bodyConf
 			cli := api.Client()
-			params := projects.NewProjectsServersPartialUpdateParams()
+			params := projects.NewProjectsServersUpdateParams()
 			params.SetNamespace(cli.Namespace)
 			if serverID == "" {
-				server, err := cli.GetServerByName(body.Name)
+				server, err := cli.GetServerByName(*body.Name)
 				if err != nil {
 					return err
 				}
@@ -162,8 +162,8 @@ func serverUpdateCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			params.SetProjectPk(projectID)
-			resp, err := cli.Projects.ProjectsServersPartialUpdate(params)
+			params.SetProjectID(projectID)
+			resp, err := cli.Projects.ProjectsServersUpdate(params, cli.AuthInfo)
 			if err != nil {
 				return err
 			}
@@ -171,7 +171,7 @@ func serverUpdateCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&serverID, "uuid", "", "Server id")
-	cmd.Flags().StringVar(&body.Name, "name", "", "Server name")
+	cmd.Flags().StringVar(body.Name, "name", "", "Server name")
 	cmd.Flags().StringVar(&body.ImageName, "image", "", "Server image")
 	cmd.Flags().StringVar(&body.EnvironmentResources, "resources", "", "Server resources")
 	cmd.Flags().StringVar(&body.StartupScript, "startup-script", "", "Server startup script")
@@ -199,16 +199,16 @@ func serverStartCmd() *cobra.Command {
 				}
 				serverID = server.ID
 			}
-			params := projects.NewProjectsServersStartCreateParams()
+			params := projects.NewProjectsServersStartParams()
 			ns := viper.GetString("namespace")
 			params.SetNamespace(ns)
 			projectID, err := cli.GetProjectID()
 			if err != nil {
 				return err
 			}
-			params.SetProjectPk(projectID)
+			params.SetProjectID(projectID)
 			params.SetID(serverID)
-			_, err = cli.Projects.ProjectsServersStartCreate(params)
+			_, err = cli.Projects.ProjectsServersStart(params, cli.AuthInfo)
 			if err != nil {
 				return err
 			}
@@ -238,15 +238,15 @@ func serverStopCmd() *cobra.Command {
 				}
 				serverID = server.ID
 			}
-			params := projects.NewProjectsServersStopCreateParams()
+			params := projects.NewProjectsServersStopParams()
 			params.SetNamespace(cli.Namespace)
 			projectID, err := cli.GetProjectID()
 			if err != nil {
 				return err
 			}
-			params.SetProjectPk(projectID)
+			params.SetProjectID(projectID)
 			params.SetID(serverID)
-			_, err = cli.Projects.ProjectsServersStopCreate(params)
+			_, err = cli.Projects.ProjectsServersStop(params, cli.AuthInfo)
 			if err != nil {
 				return err
 			}
@@ -276,15 +276,15 @@ func serverTerminateCmd() *cobra.Command {
 				}
 				serverID = server.ID
 			}
-			params := projects.NewProjectsServersTerminateCreateParams()
+			params := projects.NewProjectsServersTerminateParams()
 			params.SetNamespace(cli.Namespace)
 			projectID, err := cli.GetProjectID()
 			if err != nil {
 				return err
 			}
-			params.SetProjectPk(projectID)
+			params.SetProjectID(projectID)
 			params.SetID(serverID)
-			_, err = cli.Projects.ProjectsServersTerminateCreate(params)
+			_, err = cli.Projects.ProjectsServersTerminate(params, cli.AuthInfo)
 			if err != nil {
 				return err
 			}
