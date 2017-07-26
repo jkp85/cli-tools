@@ -139,6 +139,7 @@ func serverUpdateCmd() *cobra.Command {
 	var serverID string
 	body := &models.ServerData{
 		Connected: []string{},
+		Name:      new(string),
 	}
 	bodyConf := &ServerConfig{}
 	cmd := &cobra.Command{

@@ -86,7 +86,10 @@ func hostCreateCmd() *cobra.Command {
 
 func hostUpdateCmd() *cobra.Command {
 	var hostID string
-	body := &models.DockerHostData{}
+	body := &models.DockerHostData{
+		Name: new(string),
+		IP:   new(string),
+	}
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: "Update host",

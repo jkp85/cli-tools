@@ -142,5 +142,5 @@ func transport(apiRoot string) *httptransport.Runtime {
 	if err != nil {
 		jww.FATAL.Fatal(err)
 	}
-	return httptransport.New(root.Host, "", []string{root.Scheme})
+	return httptransport.New(root.Host, "/v1", []string{root.Scheme})
 }

@@ -151,7 +151,9 @@ func accountDescribeCmd() *cobra.Command {
 func accountUpdateCmd() *cobra.Command {
 	var userID string
 	accountBody := &models.UserData{
-		Profile: &models.UserProfile{},
+		Username: new(string),
+		Password: new(string),
+		Profile:  &models.UserProfile{},
 	}
 	cmd := &cobra.Command{
 		Use:   "update",

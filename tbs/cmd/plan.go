@@ -93,7 +93,9 @@ func planCreateCmd() *cobra.Command {
 
 func planUpdateCmd() *cobra.Command {
 	var planID string
-	updateBody := &models.PlanData{}
+	updateBody := &models.PlanData{
+		Name: new(string),
+	}
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: "Update plan information",

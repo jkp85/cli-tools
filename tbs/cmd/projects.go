@@ -199,7 +199,9 @@ func addMembers(projectID string, members ...string) error {
 func projectUpdateCmd() *cobra.Command {
 	var projectID string
 	var members []string
-	updateBody := &models.ProjectData{}
+	updateBody := &models.ProjectData{
+		Name: new(string),
+	}
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: "Update project",
