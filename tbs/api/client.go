@@ -134,7 +134,7 @@ func Client() *APIClient {
 }
 
 func AuthInfo(req runtime.ClientRequest, reg strfmt.Registry) error {
-	return req.SetHeaderParam("AUTHORIZATION", fmt.Sprintf("Bearer: %s", viper.GetString("token")))
+	return req.SetHeaderParam("AUTHORIZATION", fmt.Sprintf("Bearer %s", viper.GetString("token")))
 }
 
 func transport(apiRoot string) *httptransport.Runtime {
@@ -142,5 +142,5 @@ func transport(apiRoot string) *httptransport.Runtime {
 	if err != nil {
 		jww.FATAL.Fatal(err)
 	}
-	return httptransport.New(root.Host, "/v1", []string{root.Scheme})
+	return httptransport.New(root.Host, "", []string{root.Scheme})
 }
