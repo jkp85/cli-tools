@@ -8,6 +8,7 @@ import (
 	"github.com/3Blades/cli-tools/tbs/api"
 	"github.com/3Blades/cli-tools/tbs/utils"
 	"github.com/3Blades/go-sdk/client/hosts"
+	"github.com/3Blades/go-sdk/models"
 	"github.com/spf13/cobra"
 	jww "github.com/spf13/jwalterweatherman"
 	"github.com/spf13/viper"
@@ -43,7 +44,7 @@ func hostListCmd() *cobra.Command {
 			cli := api.Client()
 			params := hosts.NewHostsListParams()
 			lf.Apply(params)
-			resp, err := cli.Hosts.HostsList(params)
+			resp, err := cli.Hosts.HostsList(params, cli.AuthInfo)
 			if err != nil {
 				return err
 			}
@@ -55,7 +56,7 @@ func hostListCmd() *cobra.Command {
 }
 
 func hostCreateCmd() *cobra.Command {
-	body := hosts.HostsCreateBody{
+	body := &models.DockerHostData{
 		Name: new(string),
 		IP:   new(string),
 	}
@@ -70,7 +71,7 @@ func hostCreateCmd() *cobra.Command {
 			params := hosts.NewHostsCreateParams()
 			params.SetNamespace(cli.Namespace)
 			params.SetData(body)
-			resp, err := cli.Hosts.HostsCreate(params)
+			resp, err := cli.Hosts.HostsCreate(params, cli.AuthInfo)
 			if err != nil {
 				return err
 			}
@@ -85,24 +86,27 @@ func hostCreateCmd() *cobra.Command {
 
 func hostUpdateCmd() *cobra.Command {
 	var hostID string
-	body := hosts.HostsPartialUpdateBody{}
+	body := &models.DockerHostData{
+		Name: new(string),
+		IP:   new(string),
+	}
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: "Update host",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var err error
-			if body.Name == "" && hostID == "" {
+			if *body.Name == "" && hostID == "" {
 				return errors.New("You must provide either host name or id")
 			}
 			cli := api.Client()
 			if hostID == "" {
-				hostID, err = cli.GetHostIDByName(body.Name)
+				hostID, err = cli.GetHostIDByName(*body.Name)
 			}
-			params := hosts.NewHostsPartialUpdateParams()
+			params := hosts.NewHostsUpdateParams()
 			params.SetNamespace(cli.Namespace)
 			params.SetID(hostID)
 			params.SetData(body)
-			resp, err := cli.Hosts.HostsPartialUpdate(params)
+			resp, err := cli.Hosts.HostsUpdate(params, cli.AuthInfo)
 			if err != nil {
 				return err
 			}
@@ -110,8 +114,8 @@ func hostUpdateCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&hostID, "uuid", "", "Host id")
-	cmd.Flags().StringVar(&body.Name, "name", "", "Host name")
-	cmd.Flags().StringVar(&body.IP, "ip", "", "Host ip")
+	cmd.Flags().StringVar(body.Name, "name", "", "Host name")
+	cmd.Flags().StringVar(body.IP, "ip", "", "Host ip")
 	cmd.Flags().Int64Var(&body.Port, "port", 0, "Host port")
 	return cmd
 }
@@ -145,7 +149,7 @@ func hostDeleteCmd() *cobra.Command {
 			params := hosts.NewHostsDeleteParams()
 			params.SetNamespace(cli.Namespace)
 			params.SetID(hostID)
-			_, err = cli.Hosts.HostsDelete(params)
+			_, err = cli.Hosts.HostsDelete(params, cli.AuthInfo)
 			if err != nil {
 				return err
 			}

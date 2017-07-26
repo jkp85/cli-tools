@@ -1,29 +1,31 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
-	"github.com/3Blades/cli-tools/tbs/api"
-	"github.com/3Blades/go-sdk/client/billing"
-	"github.com/spf13/viper"
-	"github.com/3Blades/cli-tools/tbs/utils"
-	jww "github.com/spf13/jwalterweatherman"
 	"fmt"
 	"strings"
+
+	"github.com/3Blades/cli-tools/tbs/api"
+	"github.com/3Blades/cli-tools/tbs/utils"
+	"github.com/3Blades/go-sdk/client/billing"
+	"github.com/3Blades/go-sdk/models"
+	"github.com/spf13/cobra"
+	jww "github.com/spf13/jwalterweatherman"
+	"github.com/spf13/viper"
 )
 
 func init() {
 	cmd := planCmd()
 	cmd.AddCommand(planListCmd(),
-	               planCreateCmd(),
-	               planUpdateCmd(),
-	               planDescribeCmd(),
-	               planDeleteCmd())
+		planCreateCmd(),
+		planUpdateCmd(),
+		planDescribeCmd(),
+		planDeleteCmd())
 	RootCmd.AddCommand(cmd)
 }
 
 func planCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "plan",
+		Use:   "plan",
 		Short: "View plans, or manage them if you have the proper permissions.",
 	}
 	cmd.PersistentFlags().StringP("format", "f", "json", "Output format")
@@ -34,14 +36,14 @@ func planCmd() *cobra.Command {
 func planListCmd() *cobra.Command {
 	var lf utils.ListFlags
 	cmd := &cobra.Command{
-		Use: "ls",
+		Use:   "ls",
 		Short: "List available plans",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cli := api.Client()
 			params := billing.NewBillingPlansListParams()
 			params.SetNamespace(cli.Namespace)
 			lf.Apply(params)
-			resp, err := cli.Billing.BillingPlansList(params)
+			resp, err := cli.Billing.BillingPlansList(params, cli.AuthInfo)
 			if err != nil {
 				return err
 			}
@@ -53,22 +55,22 @@ func planListCmd() *cobra.Command {
 }
 
 func planCreateCmd() *cobra.Command {
-	body := billing.BillingPlansCreateBody{
-		Amount: new(int64),
-		Interval: new(string),
+	body := &models.PlanData{
+		Amount:        new(int64),
+		Interval:      new(string),
 		IntervalCount: new(int64),
-		Name: new(string),
+		Name:          new(string),
 	}
 
 	cmd := &cobra.Command{
-		Use: "create",
+		Use:   "create",
 		Short: "Create a plan",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cli := api.Client()
 			params := billing.NewBillingPlansCreateParams()
 			params.SetNamespace(cli.Namespace)
 			params.SetData(body)
-			resp, err := cli.Billing.BillingPlansCreate(params)
+			resp, err := cli.Billing.BillingPlansCreate(params, cli.AuthInfo)
 
 			if err != nil {
 				return err
@@ -91,19 +93,21 @@ func planCreateCmd() *cobra.Command {
 
 func planUpdateCmd() *cobra.Command {
 	var planID string
-	updateBody := billing.BillingPlansPartialUpdateBody{}
+	updateBody := &models.PlanData{
+		Name: new(string),
+	}
 	cmd := &cobra.Command{
-		Use: "update",
+		Use:   "update",
 		Short: "Update plan information",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cli := api.Client()
 
-			params := billing.NewBillingPlansPartialUpdateParams()
+			params := billing.NewBillingPlansUpdateParams()
 			params.SetNamespace(cli.Namespace)
 			params.SetID(planID)
 			params.SetData(updateBody)
 
-			resp, err := cli.Billing.BillingPlansPartialUpdate(params)
+			resp, err := cli.Billing.BillingPlansUpdate(params, cli.AuthInfo)
 
 			if err != nil {
 				return err
@@ -115,17 +119,17 @@ func planUpdateCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&planID, "uuid", "", "Plan ID")
-	cmd.Flags().StringVar(&updateBody.Name, "name", "", "Name of the plan.")
+	cmd.Flags().StringVar(updateBody.Name, "name", "", "Name of the plan.")
 	cmd.Flags().StringVar(&updateBody.StatementDescriptor, "statement_descriptor", "", "Additional info that will show on customer's credit card statement.")
 	cmd.Flags().Int64Var(&updateBody.TrialPeriodDays, "trial_period", 0, "Length of the plan's trial period, in days.")
 
 	return cmd
 }
 
-func planDescribeCmd() * cobra.Command {
+func planDescribeCmd() *cobra.Command {
 	var planID string
 	cmd := &cobra.Command{
-		Use: "describe",
+		Use:   "describe",
 		Short: "Plan Details",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cli := api.Client()
@@ -133,7 +137,7 @@ func planDescribeCmd() * cobra.Command {
 			params.SetNamespace(cli.Namespace)
 			params.SetID(planID)
 
-			resp, err := cli.Billing.BillingPlansRead(params)
+			resp, err := cli.Billing.BillingPlansRead(params, cli.AuthInfo)
 
 			if err != nil {
 				return err
@@ -151,7 +155,7 @@ func planDeleteCmd() *cobra.Command {
 	var planID string
 
 	cmd := &cobra.Command{
-		Use: "delete",
+		Use:   "delete",
 		Short: "Delete a plan. Also deletes all subscriptions to the plan.",
 		RunE: func(cmd *cobra.Command, vars []string) error {
 			confirm, err := readStdin(fmt.Sprint("Are you sure you want to delete this plan? (Y/n): "))
@@ -169,7 +173,7 @@ func planDeleteCmd() *cobra.Command {
 			params.SetNamespace(cli.Namespace)
 			params.SetID(planID)
 
-			_, err = cli.Billing.BillingPlansDelete(params)
+			_, err = cli.Billing.BillingPlansDelete(params, cli.AuthInfo)
 
 			if err != nil {
 				return err

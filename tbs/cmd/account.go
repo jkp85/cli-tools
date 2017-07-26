@@ -34,7 +34,7 @@ func accountCmd() *cobra.Command {
 }
 
 func accountCreateCmd() *cobra.Command {
-	accountBody := users.UsersCreateBody{
+	accountBody := &models.UserData{
 		Username: new(string),
 		Password: new(string),
 		Profile:  &models.UserProfile{},
@@ -66,7 +66,7 @@ func accountCreateCmd() *cobra.Command {
 			cli := api.Client()
 			params := users.NewUsersCreateParams()
 			params.SetData(accountBody)
-			resp, err := cli.Users.UsersCreate(params)
+			resp, err := cli.Users.UsersCreate(params, cli.AuthInfo)
 			if err != nil {
 				return err
 			}
@@ -92,7 +92,7 @@ func getUserByID(userID string) (*models.User, error) {
 	cli := api.Client()
 	params := users.NewUsersReadParams()
 	params.SetID(userID)
-	resp, err := cli.Users.UsersRead(params)
+	resp, err := cli.Users.UsersRead(params, cli.AuthInfo)
 	return resp.Payload, err
 }
 
@@ -100,7 +100,7 @@ func getUserByName(username string) (*models.User, error) {
 	cli := api.Client()
 	params := users.NewUsersListParams()
 	params.SetUsername(&username)
-	resp, err := cli.Users.UsersList(params)
+	resp, err := cli.Users.UsersList(params, cli.AuthInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +114,7 @@ func getUserByEmail(email string) (*models.User, error) {
 	cli := api.Client()
 	params := users.NewUsersListParams()
 	params.SetEmail(&email)
-	resp, err := cli.Users.UsersList(params)
+	resp, err := cli.Users.UsersList(params, cli.AuthInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -150,18 +150,20 @@ func accountDescribeCmd() *cobra.Command {
 
 func accountUpdateCmd() *cobra.Command {
 	var userID string
-	accountBody := users.UsersPartialUpdateBody{
-		Profile: &models.UserProfile{},
+	accountBody := &models.UserData{
+		Username: new(string),
+		Password: new(string),
+		Profile:  &models.UserProfile{},
 	}
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: "Update account",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cli := api.Client()
-			params := users.NewUsersPartialUpdateParams()
+			params := users.NewUsersUpdateParams()
 			params.SetData(accountBody)
 			params.SetID(userID)
-			resp, err := cli.Users.UsersPartialUpdate(params)
+			resp, err := cli.Users.UsersUpdate(params, cli.AuthInfo)
 			if err != nil {
 				return err
 			}
@@ -171,8 +173,8 @@ func accountUpdateCmd() *cobra.Command {
 	cmd.Flags().StringVar(&userID, "uuid", "", "User id")
 	cmd.Flags().StringVar(&accountBody.FirstName, "first-name", "", "Update account first name")
 	cmd.Flags().StringVar(&accountBody.LastName, "last-name", "", "Update account last name")
-	cmd.Flags().StringVar(&accountBody.Username, "username", "", "Update account username")
-	cmd.Flags().StringVar(&accountBody.Password, "password", "", "Update account password")
+	cmd.Flags().StringVar(accountBody.Username, "username", "", "Update account username")
+	cmd.Flags().StringVar(accountBody.Password, "password", "", "Update account password")
 	cmd.Flags().StringVar(&accountBody.Profile.URL, "url", "", "Update account url")
 	cmd.Flags().StringVar(&accountBody.Profile.AvatarURL, "avatar-url", "", "Update account avatar-url")
 	cmd.Flags().StringVar(&accountBody.Profile.Bio, "bio", "", "Update account bio")
@@ -204,7 +206,7 @@ func accountDeleteCmd() *cobra.Command {
 				return err
 			}
 			params.SetID(user.ID)
-			_, err = cli.Users.UsersDelete(params)
+			_, err = cli.Users.UsersDelete(params, cli.AuthInfo)
 			if err != nil {
 				return err
 			}

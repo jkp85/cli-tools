@@ -8,6 +8,7 @@ import (
 	"github.com/3Blades/cli-tools/tbs/api"
 	"github.com/3Blades/cli-tools/tbs/utils"
 	"github.com/3Blades/go-sdk/client/projects"
+	"github.com/3Blades/go-sdk/models"
 	"github.com/spf13/cobra"
 	jww "github.com/spf13/jwalterweatherman"
 	"github.com/spf13/viper"
@@ -48,7 +49,7 @@ func projectListCmd() *cobra.Command {
 			lf.Apply(params)
 			params.SetName(filters.Get("name"))
 			params.SetPrivate(filters.Get("private"))
-			resp, err := cli.Projects.ProjectsList(params)
+			resp, err := cli.Projects.ProjectsList(params, cli.AuthInfo)
 			if err != nil {
 				return err
 			}
@@ -62,7 +63,7 @@ func projectListCmd() *cobra.Command {
 
 func projectCreateCmd() *cobra.Command {
 	var members []string
-	body := projects.ProjectsCreateBody{
+	body := &models.ProjectData{
 		Name:          new(string),
 		Private:       false,
 		Collaborators: []string{},
@@ -78,7 +79,7 @@ func projectCreateCmd() *cobra.Command {
 			params := projects.NewProjectsCreateParams()
 			params.SetNamespace(cli.Namespace)
 			params.SetData(body)
-			resp, err := cli.Projects.ProjectsCreate(params)
+			resp, err := cli.Projects.ProjectsCreate(params, cli.AuthInfo)
 			if err != nil {
 				return fmt.Errorf("There was an error creating project: %s\n", err)
 			}
@@ -126,7 +127,7 @@ func projectDeleteCmd() *cobra.Command {
 			deleteParams := projects.NewProjectsDeleteParams()
 			deleteParams.SetNamespace(cli.Namespace)
 			deleteParams.SetID(projectID)
-			_, err = cli.Projects.ProjectsDelete(deleteParams)
+			_, err = cli.Projects.ProjectsDelete(deleteParams, cli.AuthInfo)
 			if err != nil {
 				return err
 			}
@@ -173,13 +174,13 @@ func addMembers(projectID string, members ...string) error {
 	for _, member := range members {
 		params := projects.NewProjectsCollaboratorsCreateParams()
 		params.SetNamespace(cli.Namespace)
-		data := projects.ProjectsCollaboratorsCreateBody{
+		data := &models.CollaboratorData{
 			Owner:  false,
 			Member: &member,
 		}
-		params.SetProjectPk(projectID)
+		params.SetProjectID(projectID)
 		params.SetData(data)
-		_, err := cli.Projects.ProjectsCollaboratorsCreate(params)
+		_, err := cli.Projects.ProjectsCollaboratorsCreate(params, cli.AuthInfo)
 		if err != nil {
 			if nerr, ok := err.(*projects.ProjectsCollaboratorsCreateBadRequest); ok {
 				for _, msg := range nerr.Payload.Member {
@@ -198,28 +199,30 @@ func addMembers(projectID string, members ...string) error {
 func projectUpdateCmd() *cobra.Command {
 	var projectID string
 	var members []string
-	updateBody := projects.ProjectsPartialUpdateBody{}
+	updateBody := &models.ProjectData{
+		Name: new(string),
+	}
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: "Update project",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cli := api.Client()
 			var err error
-			if updateBody.Name == "" && projectID == "" {
+			if *updateBody.Name == "" && projectID == "" {
 				return errors.New("You must provide either project name or id")
 			}
 			if projectID == "" {
-				projectID, err = cli.GetProjectIDByName(updateBody.Name)
+				projectID, err = cli.GetProjectIDByName(*updateBody.Name)
 			}
 			err = addMembers(projectID, members...)
 			if err != nil {
 				return err
 			}
-			params := projects.NewProjectsPartialUpdateParams()
+			params := projects.NewProjectsUpdateParams()
 			params.SetNamespace(cli.Namespace)
 			params.SetID(projectID)
 			params.SetData(updateBody)
-			resp, err := cli.Projects.ProjectsPartialUpdate(params)
+			resp, err := cli.Projects.ProjectsUpdate(params, cli.AuthInfo)
 			if err != nil {
 				return err
 			}
@@ -228,7 +231,7 @@ func projectUpdateCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&projectID, "uuid", "", "Project id")
-	cmd.Flags().StringVar(&updateBody.Name, "name", "", "Project name")
+	cmd.Flags().StringVar(updateBody.Name, "name", "", "Project name")
 	cmd.Flags().StringVar(&updateBody.Description, "description", "", "Project description")
 	cmd.Flags().BoolVar(&updateBody.Private, "privacy", false, "Should this project be private?")
 	cmd.Flags().StringSliceVar(&members, "members", []string{}, "Project members")

@@ -1,23 +1,24 @@
 package cmd
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"mime/multipart"
+	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
+
 	"github.com/3Blades/cli-tools/tbs/api"
 	"github.com/3Blades/cli-tools/tbs/utils"
 	"github.com/3Blades/go-sdk/client/projects"
 	"github.com/3Blades/go-sdk/models"
 	"github.com/spf13/cobra"
 	jww "github.com/spf13/jwalterweatherman"
-	"os"
-	"net/http"
-	"mime/multipart"
-	"bytes"
-	"io"
 	"github.com/spf13/viper"
-	"encoding/json"
 )
 
 func init() {
@@ -52,8 +53,8 @@ func fileListCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			params.SetProjectPk(projectID)
-			resp, err := cli.Projects.ProjectsProjectFilesList(params)
+			params.SetProjectID(projectID)
+			resp, err := cli.Projects.ProjectsProjectFilesList(params, cli.AuthInfo)
 			if err != nil {
 				return err
 			}
@@ -68,8 +69,8 @@ func getFileByName(name, projectID string) (*models.ProjectFile, error) {
 	cli := api.Client()
 	params := projects.NewProjectsProjectFilesListParams()
 	params.SetNamespace(cli.Namespace)
-	params.SetProjectPk(projectID)
-	resp, err := cli.Projects.ProjectsProjectFilesList(params)
+	params.SetProjectID(projectID)
+	resp, err := cli.Projects.ProjectsProjectFilesList(params, cli.AuthInfo)
 	if err != nil {
 		return &models.ProjectFile{}, err
 	}
@@ -94,7 +95,7 @@ func fileDeleteCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			params.SetProjectPk(projectID)
+			params.SetProjectID(projectID)
 			for _, arg := range args {
 				if !utils.IsUUID(arg) {
 					file, err := getFileByName(arg, projectID)
@@ -104,7 +105,7 @@ func fileDeleteCmd() *cobra.Command {
 					arg = file.ID
 				}
 				params.SetID(arg)
-				_, err = cli.Projects.ProjectsProjectFilesDelete(params)
+				_, err = cli.Projects.ProjectsProjectFilesDelete(params, cli.AuthInfo)
 				if err != nil {
 					jww.FEEDBACK.Println(err)
 				}
@@ -116,7 +117,7 @@ func fileDeleteCmd() *cobra.Command {
 	return cmd
 }
 
-func newFileUploadRequest(uri string, params map[string]string, paramName, path string) (*http.Request, error){
+func newFileUploadRequest(uri string, params map[string]string, paramName, path string) (*http.Request, error) {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 	if paramName != "" {
@@ -141,14 +142,14 @@ func newFileUploadRequest(uri string, params map[string]string, paramName, path 
 		_, err = io.Copy(part, localFile)
 
 		for key, val := range params {
-		_ = writer.WriteField(key, val)
+			_ = writer.WriteField(key, val)
 
 		}
 		err = writer.Close()
 		if err != nil {
 			return nil, err
 		}
-	} else{
+	} else {
 		jsonValue, _ := json.Marshal(params)
 		body = bytes.NewBuffer(jsonValue)
 	}
@@ -160,12 +161,12 @@ func newFileUploadRequest(uri string, params map[string]string, paramName, path 
 		req.Header.Set("Content-Type", "application/json")
 	}
 	token := viper.GetString("token")
-	req.Header.Set("AUTHORIZATION", "JWT " + token)
+	req.Header.Set("AUTHORIZATION", "JWT "+token)
 
 	return req, err
 }
 
-func getFileUploadResponse(request *http.Request) (*bytes.Buffer, error){
+func getFileUploadResponse(request *http.Request) (*bytes.Buffer, error) {
 	client := &http.Client{}
 	resp, err := client.Do(request)
 	if err != nil {
@@ -183,7 +184,7 @@ func getFileUploadResponse(request *http.Request) (*bytes.Buffer, error){
 }
 
 func fileUploadCmd() *cobra.Command {
-	uploadBody := projects.ProjectsProjectFilesCreateBody{}
+	uploadBody := &models.ProjectFile{}
 	cmd := &cobra.Command{
 		Use:   "upload [files]",
 		Short: "Upload files",
@@ -200,10 +201,9 @@ func fileUploadCmd() *cobra.Command {
 			apiUrl := rootUrl + endPoint
 
 			extraParams := map[string]string{
-				"project": projectID,
-				"public": strconv.FormatBool(uploadBody.Public),
-				"name": uploadBody.Name,
-				"path": uploadBody.Path,
+				"project":     projectID,
+				"public":      strconv.FormatBool(uploadBody.Public),
+				"name":        uploadBody.Name,
 				"base64_data": uploadBody.Base64Data,
 			}
 			if len(args) > 0 {
@@ -221,7 +221,7 @@ func fileUploadCmd() *cobra.Command {
 					}
 					fmt.Println(body)
 				}
-			} else{
+			} else {
 				request, err := newFileUploadRequest(apiUrl, extraParams, "", "")
 				if err != nil {
 					jww.ERROR.Printf("There was an error uploading file: %s\n", uploadBody.Name)
@@ -241,7 +241,6 @@ func fileUploadCmd() *cobra.Command {
 	flags := cmd.Flags()
 	flags.BoolVar(&uploadBody.Public, "public", true, "Should the file be public?")
 	flags.StringVar(&uploadBody.Name, "name", "", "The file's name, only to be used in conjunction with base64 data")
-	flags.StringVar(&uploadBody.Path, "path", "", "THe path, relative to the project's directory, the file will be saved in.")
 	flags.StringVar(&uploadBody.Base64Data, "base64_data", "", "")
 	return cmd
 }
