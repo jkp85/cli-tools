@@ -37,7 +37,7 @@ func TestGetProjectIDByName(t *testing.T) {
 	}
 	cli := &APIClient{
 		apiclient.New(httptransport.New(uri.Host, "", []string{"http"}), strfmt.Default),
-		"", "", "", "", "",
+		"", "", "", "", "", AuthInfo,
 	}
 	id, err := cli.GetProjectIDByName(name)
 	if err != nil {
@@ -71,7 +71,7 @@ func TestListServers(t *testing.T) {
 	}
 	cli := &APIClient{
 		apiclient.New(httptransport.New(uri.Host, "", []string{"http"}), strfmt.Default),
-		"test", projectName, projectID, "", "",
+		"test", projectName, projectID, "", "", AuthInfo,
 	}
 	results, err := cli.ListServers(&utils.ListFlags{})
 	if err != nil {
@@ -99,7 +99,7 @@ func TestGetServerByName(t *testing.T) {
 	}
 	cli := &APIClient{
 		apiclient.New(httptransport.New(uri.Host, "", []string{"http"}), strfmt.Default),
-		"test", "Test", uuid.NewV4().String(), "", "",
+		"test", "Test", uuid.NewV4().String(), "", "", AuthInfo,
 	}
 	id, err := cli.GetServerByName(serverName)
 	if err != nil {
@@ -126,7 +126,7 @@ func TestGetServerByID(t *testing.T) {
 	}
 	cli := &APIClient{
 		apiclient.New(httptransport.New(uri.Host, "", []string{"http"}), strfmt.Default),
-		"test", "Test", uuid.NewV4().String(), "", "",
+		"test", "Test", uuid.NewV4().String(), "", "", AuthInfo,
 	}
 	result, err := cli.GetServerByID(serverID)
 	if err != nil {
