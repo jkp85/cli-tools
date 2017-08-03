@@ -54,7 +54,7 @@ func (f *filter) Set(val string) error {
 	return nil
 }
 
-func (f *filter) Type() string {
+func (f filter) Type() string {
 	return "filter"
 }
 
