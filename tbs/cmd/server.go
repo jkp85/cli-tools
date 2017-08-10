@@ -61,19 +61,12 @@ func serverLsCmd() *cobra.Command {
 	return cmd
 }
 
-type ServerConfig struct {
-	Script   string `json:"script,omitempty"`
-	Function string `json:"function,omitempty"`
-	Command  string `json:"command,omitempty"`
-	Type     string `json:"type,omitempty"`
-}
-
 func serverCreateCmd() *cobra.Command {
 	body := &models.ServerData{
 		Name:      new(string),
 		Connected: []string{},
 	}
-	bodyConf := &ServerConfig{}
+	bodyConf := &models.ServerConfig{}
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create server",
@@ -82,7 +75,7 @@ func serverCreateCmd() *cobra.Command {
 			params := projects.NewProjectsServersCreateParams()
 			params.SetNamespace(cli.Namespace)
 			body.Config = bodyConf
-			params.SetData(body)
+			params.SetServerData(body)
 			projectID, err := cli.GetProjectID()
 			if err != nil {
 				return err
@@ -97,7 +90,7 @@ func serverCreateCmd() *cobra.Command {
 	}
 	cmd.Flags().StringVar(body.Name, "name", "", "Server name")
 	cmd.Flags().StringVar(&body.ImageName, "image", "", "Server image")
-	cmd.Flags().StringVar(&body.EnvironmentResources, "resources", "", "Server resources")
+	cmd.Flags().StringVar(&body.ServerSize, "resources", "", "Server resources")
 	cmd.Flags().StringVar(&body.StartupScript, "startup-script", "", "Server startup script")
 	cmd.Flags().StringVar(&bodyConf.Function, "function", "", "Function to run")
 	cmd.Flags().StringVar(&bodyConf.Script, "script", "", "Script to run")
@@ -141,7 +134,7 @@ func serverUpdateCmd() *cobra.Command {
 		Connected: []string{},
 		Name:      new(string),
 	}
-	bodyConf := &ServerConfig{}
+	bodyConf := &models.ServerConfig{}
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: "Update server",
@@ -158,7 +151,7 @@ func serverUpdateCmd() *cobra.Command {
 				serverID = server.ID
 			}
 			params.SetID(serverID)
-			params.SetData(body)
+			params.SetServerData(body)
 			projectID, err := cli.GetProjectID()
 			if err != nil {
 				return err
@@ -174,7 +167,7 @@ func serverUpdateCmd() *cobra.Command {
 	cmd.Flags().StringVar(&serverID, "uuid", "", "Server id")
 	cmd.Flags().StringVar(body.Name, "name", "", "Server name")
 	cmd.Flags().StringVar(&body.ImageName, "image", "", "Server image")
-	cmd.Flags().StringVar(&body.EnvironmentResources, "resources", "", "Server resources")
+	cmd.Flags().StringVar(&body.StartupScript, "resources", "", "Server resources")
 	cmd.Flags().StringVar(&body.StartupScript, "startup-script", "", "Server startup script")
 	cmd.Flags().StringVar(&bodyConf.Function, "function", "", "Function to run")
 	cmd.Flags().StringVar(&bodyConf.Script, "script", "", "Script to run")

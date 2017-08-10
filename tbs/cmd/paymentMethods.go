@@ -23,7 +23,6 @@ func init() {
 		billingDescribeCardCmd(),
 		billingUpdateCardCmd(),
 		billingDeleteCardCmd(),
-		billingSetDefaultCardCmd(),
 		billingCreateCardInteractiveCmd())
 	RootCmd.AddCommand(cmd)
 }
@@ -92,7 +91,7 @@ func billingUpdateCardCmd() *cobra.Command {
 			params := billing.NewBillingCardsUpdateParams()
 			params.SetNamespace(cli.Namespace)
 			params.SetID(cardID)
-			params.SetData(updateBody)
+			params.SetCardData(updateBody)
 
 			resp, err := cli.Billing.BillingCardsUpdate(params, cli.AuthInfo)
 			if err != nil {
@@ -245,7 +244,7 @@ func billingCreateCardInteractiveCmd() *cobra.Command {
 			body := &models.CardData{
 				Token: tkn.ID,
 			}
-			params.SetData(body)
+			params.SetCardData(body)
 
 			resp, err := cli.Billing.BillingCardsCreate(params, cli.AuthInfo)
 
@@ -254,55 +253,6 @@ func billingCreateCardInteractiveCmd() *cobra.Command {
 		},
 	}
 
-	return cmd
-}
-
-func getCustomerByUser() (*models.Customer, error) {
-
-	cli := api.Client()
-	namespace := viper.GetString("namespace")
-	params := billing.NewBillingCustomersListParams()
-	params.SetNamespace(namespace)
-	resp, err := cli.Billing.BillingCustomersList(params, cli.AuthInfo)
-
-	if err != nil {
-		return &models.Customer{}, err
-	}
-
-	return resp.Payload[0], nil
-
-}
-
-func billingSetDefaultCardCmd() *cobra.Command {
-	updateBody := &models.CustomerData{}
-	cmd := &cobra.Command{
-		Use:   "set-default",
-		Short: "Set your default payment method.",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cli := api.Client()
-			params := billing.NewBillingCustomersUpdateParams()
-			params.SetNamespace(cli.Namespace)
-
-			customer, err := getCustomerByUser()
-
-			if err != nil {
-				return err
-			}
-
-			params.SetID(customer.ID)
-			params.SetData(updateBody)
-
-			resp, err := cli.Billing.BillingCustomersUpdate(params, cli.AuthInfo)
-
-			if err != nil {
-				return err
-			}
-
-			jww.FEEDBACK.Println("Default Payment Source Set.")
-			return api.Render("billing_format", resp.Payload)
-		},
-	}
-	cmd.Flags().StringVar(&updateBody.DefaultSource, "uuid", "", "Card ID")
 	return cmd
 }
 

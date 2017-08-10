@@ -64,7 +64,7 @@ func subscriptionCreateCmd() *cobra.Command {
 			cli := api.Client()
 			params := billing.NewBillingSubscriptionsCreateParams()
 			params.SetNamespace(cli.Namespace)
-			params.SetData(body)
+			params.SetSubscriptionData(body)
 			resp, err := cli.Billing.BillingSubscriptionsCreate(params, cli.AuthInfo)
 
 			if err != nil {
