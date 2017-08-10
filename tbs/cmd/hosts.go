@@ -70,7 +70,7 @@ func hostCreateCmd() *cobra.Command {
 			cli := api.Client()
 			params := hosts.NewHostsCreateParams()
 			params.SetNamespace(cli.Namespace)
-			params.SetData(body)
+			params.SetDockerhostData(body)
 			resp, err := cli.Hosts.HostsCreate(params, cli.AuthInfo)
 			if err != nil {
 				return err
@@ -105,7 +105,7 @@ func hostUpdateCmd() *cobra.Command {
 			params := hosts.NewHostsUpdateParams()
 			params.SetNamespace(cli.Namespace)
 			params.SetID(hostID)
-			params.SetData(body)
+			params.SetDockerhostData(body)
 			resp, err := cli.Hosts.HostsUpdate(params, cli.AuthInfo)
 			if err != nil {
 				return err

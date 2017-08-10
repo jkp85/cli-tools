@@ -65,7 +65,7 @@ func accountCreateCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cli := api.Client()
 			params := users.NewUsersCreateParams()
-			params.SetData(accountBody)
+			params.SetUserData(accountBody)
 			resp, err := cli.Users.UsersCreate(params, cli.AuthInfo)
 			if err != nil {
 				return err
@@ -161,7 +161,7 @@ func accountUpdateCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cli := api.Client()
 			params := users.NewUsersUpdateParams()
-			params.SetData(accountBody)
+			params.SetUserData(accountBody)
 			params.SetID(userID)
 			resp, err := cli.Users.UsersUpdate(params, cli.AuthInfo)
 			if err != nil {

@@ -78,7 +78,7 @@ func projectCreateCmd() *cobra.Command {
 			cli := api.Client()
 			params := projects.NewProjectsCreateParams()
 			params.SetNamespace(cli.Namespace)
-			params.SetData(body)
+			params.SetProjectData(body)
 			resp, err := cli.Projects.ProjectsCreate(params, cli.AuthInfo)
 			if err != nil {
 				return fmt.Errorf("There was an error creating project: %s\n", err)
@@ -179,7 +179,7 @@ func addMembers(projectID string, members ...string) error {
 			Member: &member,
 		}
 		params.SetProjectID(projectID)
-		params.SetData(data)
+		params.SetCollaboratorData(data)
 		_, err := cli.Projects.ProjectsCollaboratorsCreate(params, cli.AuthInfo)
 		if err != nil {
 			if nerr, ok := err.(*projects.ProjectsCollaboratorsCreateBadRequest); ok {
@@ -221,7 +221,7 @@ func projectUpdateCmd() *cobra.Command {
 			params := projects.NewProjectsUpdateParams()
 			params.SetNamespace(cli.Namespace)
 			params.SetID(projectID)
-			params.SetData(updateBody)
+			params.SetProjectData(updateBody)
 			resp, err := cli.Projects.ProjectsUpdate(params, cli.AuthInfo)
 			if err != nil {
 				return err

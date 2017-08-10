@@ -80,7 +80,7 @@ func readPassword() (string, error) {
 func getToken(username, password string) (string, error) {
 	cli := api.Client()
 	params := auth.NewAuthJwtTokenAuthParams()
-	params.SetData(&models.JWTData{
+	params.SetJwtData(&models.JWTData{
 		Username: &username,
 		Password: &password,
 	})
