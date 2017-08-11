@@ -20,6 +20,14 @@ import (
 
 func init() {
 	cmd := serverCmd()
+	triggerCmd := serverTriggerCmd()
+	triggerCmd.AddCommand(
+		serverTriggerListCmd(),
+		serverTriggerDescribeCmd(),
+		serverTriggerCreateCmd(),
+		serverTriggerUpdateCmd(),
+		serverTriggerDeleteCmd(),
+	)
 	cmd.AddCommand(
 		serverLsCmd(),
 		serverCreateCmd(),
@@ -29,6 +37,7 @@ func init() {
 		serverStopCmd(),
 		serverTerminateCmd(),
 		serverLogsCmd(),
+		triggerCmd,
 	)
 	RootCmd.AddCommand(cmd)
 }
@@ -129,7 +138,7 @@ func serverDescribeCmd() *cobra.Command {
 }
 
 func serverUpdateCmd() *cobra.Command {
-	var serverID string
+	var serverID, name string
 	body := &models.ServerData{
 		Connected: []string{},
 		Name:      new(string),
@@ -143,20 +152,11 @@ func serverUpdateCmd() *cobra.Command {
 			cli := api.Client()
 			params := projects.NewProjectsServersUpdateParams()
 			params.SetNamespace(cli.Namespace)
-			if serverID == "" {
-				server, err := cli.GetServerByName(*body.Name)
-				if err != nil {
-					return err
-				}
-				serverID = server.ID
-			}
-			params.SetID(serverID)
-			params.SetServerData(body)
-			projectID, err := cli.GetProjectID()
+			err := setServerPathParams(params, serverID, name)
 			if err != nil {
 				return err
 			}
-			params.SetProjectID(projectID)
+			params.SetServerData(body)
 			resp, err := cli.Projects.ProjectsServersUpdate(params, cli.AuthInfo)
 			if err != nil {
 				return err
@@ -164,7 +164,8 @@ func serverUpdateCmd() *cobra.Command {
 			return api.Render("server_format", resp.Payload)
 		},
 	}
-	cmd.Flags().StringVar(&serverID, "uuid", "", "Server id")
+	cmd.Flags().StringVar(&name, "server-name", "", "Server name")
+	cmd.Flags().StringVar(&serverID, "server-id", "", "Server id")
 	cmd.Flags().StringVar(body.Name, "name", "", "Server name")
 	cmd.Flags().StringVar(&body.ImageName, "image", "", "Server image")
 	cmd.Flags().StringVar(&body.StartupScript, "resources", "", "Server resources")
@@ -183,25 +184,12 @@ func serverStartCmd() *cobra.Command {
 		Short: "Start server",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cli := api.Client()
-			if serverID == "" && name == "" {
-				return errors.New("You have to specify server id or name")
-			}
-			if serverID == "" {
-				server, err := cli.GetServerByName(name)
-				if err != nil {
-					return err
-				}
-				serverID = server.ID
-			}
 			params := projects.NewProjectsServersStartParams()
-			ns := viper.GetString("namespace")
-			params.SetNamespace(ns)
-			projectID, err := cli.GetProjectID()
+			params.SetNamespace(cli.Namespace)
+			err := setServerPathParams(params, serverID, name)
 			if err != nil {
 				return err
 			}
-			params.SetProjectID(projectID)
-			params.SetID(serverID)
 			_, err = cli.Projects.ProjectsServersStart(params, cli.AuthInfo)
 			if err != nil {
 				return err
@@ -222,24 +210,12 @@ func serverStopCmd() *cobra.Command {
 		Short: "Stop server",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cli := api.Client()
-			if serverID == "" && name == "" {
-				return errors.New("You have to specify server id or name")
-			}
-			if serverID == "" {
-				server, err := cli.GetServerByName(name)
-				if err != nil {
-					return err
-				}
-				serverID = server.ID
-			}
 			params := projects.NewProjectsServersStopParams()
 			params.SetNamespace(cli.Namespace)
-			projectID, err := cli.GetProjectID()
+			err := setServerPathParams(params, serverID, name)
 			if err != nil {
 				return err
 			}
-			params.SetProjectID(projectID)
-			params.SetID(serverID)
 			_, err = cli.Projects.ProjectsServersStop(params, cli.AuthInfo)
 			if err != nil {
 				return err
@@ -260,24 +236,12 @@ func serverTerminateCmd() *cobra.Command {
 		Short: "Terminate server",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cli := api.Client()
-			if serverID == "" && name == "" {
-				return errors.New("You have to specify server id or name")
-			}
-			if serverID == "" {
-				server, err := cli.GetServerByName(name)
-				if err != nil {
-					return err
-				}
-				serverID = server.ID
-			}
 			params := projects.NewProjectsServersTerminateParams()
 			params.SetNamespace(cli.Namespace)
-			projectID, err := cli.GetProjectID()
+			err := setServerPathParams(params, serverID, name)
 			if err != nil {
 				return err
 			}
-			params.SetProjectID(projectID)
-			params.SetID(serverID)
 			_, err = cli.Projects.ProjectsServersTerminate(params, cli.AuthInfo)
 			if err != nil {
 				return err
@@ -356,4 +320,235 @@ func serverLogsCmd() *cobra.Command {
 	cmd.Flags().StringVar(&name, "name", "", "Server name")
 	cmd.Flags().StringVar(&serverID, "uuid", "", "Server id")
 	return cmd
+}
+
+func serverTriggerCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "trigger",
+		Short: "Handle server triggers",
+	}
+	cmd.PersistentFlags().StringP("format", "f", "json", "Output format")
+	viper.BindPFlag("server_trigger_format", cmd.PersistentFlags().Lookup("format"))
+	return cmd
+}
+
+func serverTriggerListCmd() *cobra.Command {
+	var name, serverID string
+	var lf utils.ListFlags
+	cmd := &cobra.Command{
+		Use:   "ls",
+		Short: "List server triggers",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cli := api.Client()
+			params := projects.NewServiceTriggerListParams()
+			params.SetNamespace(cli.Namespace)
+			err := setTriggerPathParams(params, serverID, name)
+			if err != nil {
+				return err
+			}
+			lf.Apply(params)
+			resp, err := cli.Projects.ServiceTriggerList(params, cli.AuthInfo)
+			if err != nil {
+				return err
+			}
+			return api.Render("server_trigger_format", resp.Payload)
+		},
+	}
+	lf.Set(cmd)
+	cmd.Flags().StringVar(&name, "server-name", "", "Server name")
+	cmd.Flags().StringVar(&serverID, "server-id", "", "Server id")
+	return cmd
+}
+
+func serverTriggerDescribeCmd() *cobra.Command {
+	var serverName, serverID, triggerName, triggerID string
+	cmd := &cobra.Command{
+		Use:   "describe",
+		Short: "Describe server trigger",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cli := api.Client()
+			params := projects.NewServiceTriggerDeleteParams()
+			params.SetNamespace(cli.Namespace)
+			projectID, serverID, err := getPathIDs(serverID, serverName)
+			if err != nil {
+				return err
+			}
+			if triggerName == "" && triggerID == "" {
+				return errors.New("You have to specify trigger id or name")
+			}
+			var trigger *models.ServerAction
+			if triggerName != "" {
+				trigger, err = cli.GetServerTriggerByName(projectID, serverID, triggerName)
+			} else {
+				trigger, err = cli.GetServerTriggerByID(projectID, serverID, triggerID)
+			}
+			if err != nil {
+				return err
+			}
+			return api.Render("server_trigger_format", trigger)
+		},
+	}
+	flags := cmd.Flags()
+	flags.StringVar(&serverName, "server-name", "", "Server name")
+	flags.StringVar(&serverID, "server-id", "", "Server id")
+	flags.StringVar(&triggerName, "name", "", "Trigger name")
+	flags.StringVar(&triggerID, "id", "", "Trigger id")
+	return cmd
+}
+
+func serverTriggerCreateCmd() *cobra.Command {
+	var name, serverID string
+	body := &models.ServerAction{
+		Webhook: &models.Webhook{
+			URL: new(string),
+		},
+	}
+	webhookPayload := api.NewJSONVal()
+	cmd := &cobra.Command{
+		Use:   "create",
+		Short: "Create server trigger",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cli := api.Client()
+			params := projects.NewServiceTriggerCreateParams()
+			params.SetNamespace(cli.Namespace)
+			err := setTriggerPathParams(params, serverID, name)
+			if err != nil {
+				return err
+			}
+			body.Webhook.Payload = webhookPayload.Value
+			params.SetServerAction(body)
+			resp, err := cli.Projects.ServiceTriggerCreate(params, cli.AuthInfo)
+			if err != nil {
+				return err
+			}
+			return api.Render("server_trigger_format", resp.Payload)
+		},
+	}
+	flags := cmd.Flags()
+	flags.StringVar(&name, "server-name", "", "Server name")
+	flags.StringVar(&serverID, "server-id", "", "Server id")
+	flags.StringVar(&body.Name, "name", "", "Trigger name")
+	flags.StringVar(&body.Operation, "operation", "", "Server operation [start, terminate]")
+	flags.StringVar(body.Webhook.URL, "webhook-url", "", "Webhook url")
+	flags.VarP(webhookPayload, "webhook-payload", "", "Webhook payload")
+	return cmd
+}
+
+func serverTriggerUpdateCmd() *cobra.Command {
+	var name, serverID string
+	body := &models.ServerAction{
+		Webhook: &models.Webhook{
+			URL: new(string),
+		},
+	}
+	webhookPayload := api.NewJSONVal()
+	cmd := &cobra.Command{
+		Use:   "update",
+		Short: "Update server trigger",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cli := api.Client()
+			params := projects.NewServiceTriggerUpdateParams()
+			params.SetNamespace(cli.Namespace)
+			err := setTriggerPathParams(params, serverID, name)
+			if err != nil {
+				return err
+			}
+			body.Webhook.Payload = webhookPayload.Value
+			params.SetServerAction(body)
+			resp, err := cli.Projects.ServiceTriggerUpdate(params, cli.AuthInfo)
+			if err != nil {
+				return err
+			}
+			return api.Render("server_trigger_format", resp.Payload)
+		},
+	}
+	flags := cmd.Flags()
+	flags.StringVar(&name, "server-name", "", "Server name")
+	flags.StringVar(&serverID, "server-id", "", "Server id")
+	flags.StringVar(&body.Name, "name", "", "Trigger name")
+	flags.StringVar(&body.Operation, "operation", "", "Server operation [start, terminate]")
+	flags.StringVar(body.Webhook.URL, "webhook-url", "", "Webhook url")
+	flags.VarP(webhookPayload, "webhook-payload", "", "Webhook payload")
+	return cmd
+}
+
+func serverTriggerDeleteCmd() *cobra.Command {
+	var name, serverID string
+	cmd := &cobra.Command{
+		Use:   "delete",
+		Short: "Delete server trigger",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cli := api.Client()
+			params := projects.NewServiceTriggerDeleteParams()
+			params.SetNamespace(cli.Namespace)
+			err := setTriggerPathParams(params, serverID, name)
+			if err != nil {
+				return err
+			}
+			_, err = cli.Projects.ServiceTriggerDelete(params, cli.AuthInfo)
+			if err != nil {
+				return err
+			}
+			jww.FEEDBACK.Println("Trigger deleted")
+			return nil
+		},
+	}
+	flags := cmd.Flags()
+	flags.StringVar(&name, "server-name", "", "Server name")
+	flags.StringVar(&serverID, "server-id", "", "Server id")
+	return cmd
+}
+
+func getPathIDs(serverID, serverName string) (string, string, error) {
+	cli := api.Client()
+	var projectID string
+	if serverID == "" && serverName == "" {
+		return "", "", errors.New("You have to specify server id or name")
+	}
+	if serverID == "" {
+		server, err := cli.GetServerByName(serverName)
+		if err != nil {
+			return "", "", err
+		}
+		serverID = server.ID
+	}
+	projectID, err := cli.GetProjectID()
+	if err != nil {
+		return "", "", err
+	}
+	return projectID, serverID, nil
+}
+
+type (
+	ProjectIDSetter interface {
+		SetProjectID(string)
+	}
+	ServerPathParamsSetter interface {
+		ProjectIDSetter
+		SetID(string)
+	}
+	TriggerPathParamsSetter interface {
+		ProjectIDSetter
+		SetServerID(string)
+	}
+)
+
+func setServerPathParams(target ServerPathParamsSetter, serverID, serverName string) error {
+	projectID, serverID, err := getPathIDs(serverID, serverName)
+	if err != nil {
+		return err
+	}
+	target.SetProjectID(projectID)
+	target.SetID(serverID)
+	return nil
+}
+
+func setTriggerPathParams(target TriggerPathParamsSetter, serverID, serverName string) error {
+	projectID, serverID, err := getPathIDs(serverID, serverName)
+	if err != nil {
+		return err
+	}
+	target.SetProjectID(projectID)
+	target.SetServerID(serverID)
+	return nil
 }

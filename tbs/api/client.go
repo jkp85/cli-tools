@@ -120,6 +120,35 @@ func (c *APIClient) GetHostIDByName(hostName string) (string, error) {
 	return resp.Payload[0].ID, nil
 }
 
+func (c *APIClient) GetServerTriggerByName(projectID, serverID, name string) (*models.ServerAction, error) {
+	params := projects.NewServiceTriggerListParams()
+	params.SetNamespace(c.Namespace)
+	params.SetProjectID(projectID)
+	params.SetServerID(serverID)
+	params.SetName(&name)
+	resp, err := c.Projects.ServiceTriggerList(params, c.AuthInfo)
+	if err != nil {
+		return nil, err
+	}
+	if len(resp.Payload) < 1 {
+		return nil, fmt.Errorf("There is no trigger with name: %s", name)
+	}
+	return resp.Payload[0], nil
+}
+
+func (c *APIClient) GetServerTriggerByID(projectID, serverID, ID string) (*models.ServerAction, error) {
+	params := projects.NewServiceTriggerReadParams()
+	params.SetNamespace(c.Namespace)
+	params.SetProjectID(projectID)
+	params.SetServerID(serverID)
+	params.SetID(ID)
+	resp, err := c.Projects.ServiceTriggerRead(params, c.AuthInfo)
+	if err != nil {
+		return nil, err
+	}
+	return resp.Payload, nil
+}
+
 func Client() *APIClient {
 	cli := apiclient.New(transport(viper.GetString("root")), strfmt.Default)
 	return &APIClient{
