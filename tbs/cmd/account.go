@@ -132,6 +132,11 @@ func accountDescribeCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var user *models.User
 			var err error
+
+			if userID == "" && username == "" {
+				return errors.New("Exactly one of --username and --uuid is required.")
+			}
+
 			if userID != "" {
 				user, err = getUserByID(userID)
 			} else {
