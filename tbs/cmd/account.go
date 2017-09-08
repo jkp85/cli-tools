@@ -79,7 +79,6 @@ func accountCreateCmd() *cobra.Command {
 	flags.StringVar(accountBody.Username, "username", "", "New account username (required)")
 	flags.StringVar(accountBody.Password, "password", "", "New account password (required)")
 	flags.StringVar(&accountBody.Profile.URL, "url", "", "New account url")
-	flags.StringVar(&accountBody.Profile.AvatarURL, "avatar-url", "", "New account avatar-url")
 	flags.StringVar(&accountBody.Profile.Bio, "bio", "", "New account bio")
 	flags.StringVar(&accountBody.Profile.Location, "location", "", "New account location")
 	flags.StringVar(&accountBody.Email, "email", "", "New account email (required)")
@@ -91,7 +90,7 @@ func accountCreateCmd() *cobra.Command {
 func getUserByID(userID string) (*models.User, error) {
 	cli := api.Client()
 	params := users.NewUsersReadParams()
-	params.SetID(userID)
+	params.SetUser(userID)
 	resp, err := cli.Users.UsersRead(params, cli.AuthInfo)
 	return resp.Payload, err
 }
@@ -167,7 +166,7 @@ func accountUpdateCmd() *cobra.Command {
 			cli := api.Client()
 			params := users.NewUsersUpdateParams()
 			params.SetUserData(accountBody)
-			params.SetID(userID)
+			params.SetUser(userID)
 			resp, err := cli.Users.UsersUpdate(params, cli.AuthInfo)
 			if err != nil {
 				return err
@@ -181,7 +180,6 @@ func accountUpdateCmd() *cobra.Command {
 	cmd.Flags().StringVar(accountBody.Username, "username", "", "Update account username")
 	cmd.Flags().StringVar(accountBody.Password, "password", "", "Update account password")
 	cmd.Flags().StringVar(&accountBody.Profile.URL, "url", "", "Update account url")
-	cmd.Flags().StringVar(&accountBody.Profile.AvatarURL, "avatar-url", "", "Update account avatar-url")
 	cmd.Flags().StringVar(&accountBody.Profile.Bio, "bio", "", "Update account bio")
 	cmd.Flags().StringVar(&accountBody.Profile.Location, "location", "", "Update account location")
 	cmd.Flags().StringVar(&accountBody.Email, "email", "", "Update account email")
@@ -210,7 +208,7 @@ func accountDeleteCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			params.SetID(user.ID)
+			params.SetUser(user.ID)
 			_, err = cli.Users.UsersDelete(params, cli.AuthInfo)
 			if err != nil {
 				return err

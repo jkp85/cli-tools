@@ -104,7 +104,7 @@ func hostUpdateCmd() *cobra.Command {
 			}
 			params := hosts.NewHostsUpdateParams()
 			params.SetNamespace(cli.Namespace)
-			params.SetID(hostID)
+			params.SetHost(hostID)
 			params.SetDockerhostData(body)
 			resp, err := cli.Hosts.HostsUpdate(params, cli.AuthInfo)
 			if err != nil {
@@ -148,7 +148,7 @@ func hostDeleteCmd() *cobra.Command {
 			}
 			params := hosts.NewHostsDeleteParams()
 			params.SetNamespace(cli.Namespace)
-			params.SetID(hostID)
+			params.SetHost(hostID)
 			_, err = cli.Hosts.HostsDelete(params, cli.AuthInfo)
 			if err != nil {
 				return err

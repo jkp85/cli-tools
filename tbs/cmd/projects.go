@@ -125,7 +125,7 @@ func projectDeleteCmd() *cobra.Command {
 			}
 			deleteParams := projects.NewProjectsDeleteParams()
 			deleteParams.SetNamespace(cli.Namespace)
-			deleteParams.SetID(projectID)
+			deleteParams.SetProject(projectID)
 			_, err = cli.Projects.ProjectsDelete(deleteParams, cli.AuthInfo)
 			if err != nil {
 				return err
@@ -177,7 +177,7 @@ func addMembers(projectID string, members ...string) error {
 			Owner:  false,
 			Member: &member,
 		}
-		params.SetProjectID(projectID)
+		params.SetProject(projectID)
 		params.SetCollaboratorData(data)
 		_, err := cli.Projects.ProjectsCollaboratorsCreate(params, cli.AuthInfo)
 		if err != nil {
@@ -219,7 +219,7 @@ func projectUpdateCmd() *cobra.Command {
 			}
 			params := projects.NewProjectsUpdateParams()
 			params.SetNamespace(cli.Namespace)
-			params.SetID(projectID)
+			params.SetProject(projectID)
 			params.SetProjectData(updateBody)
 			resp, err := cli.Projects.ProjectsUpdate(params, cli.AuthInfo)
 			if err != nil {

@@ -63,7 +63,7 @@ func (c *APIClient) ListServers(ls *utils.ListFlags) ([]*models.Server, error) {
 	if err != nil {
 		return []*models.Server{}, err
 	}
-	params.SetProjectID(projectID)
+	params.SetProject(projectID)
 	resp, err := c.Projects.ProjectsServersList(params, c.AuthInfo)
 	if err != nil {
 		return []*models.Server{}, err
@@ -78,7 +78,7 @@ func (c *APIClient) GetServerByName(name string) (*models.Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	params.SetProjectID(projectID)
+	params.SetProject(projectID)
 	params.SetName(&name)
 	resp, err := c.Projects.ProjectsServersList(params, c.AuthInfo)
 	if err != nil {
@@ -93,12 +93,12 @@ func (c *APIClient) GetServerByName(name string) (*models.Server, error) {
 func (c *APIClient) GetServerByID(serverID string) (*models.Server, error) {
 	params := projects.NewProjectsServersReadParams()
 	params.SetNamespace(c.Namespace)
-	params.SetID(serverID)
+	params.SetServer(serverID)
 	projectID, err := c.GetProjectID()
 	if err != nil {
 		return nil, err
 	}
-	params.SetProjectID(projectID)
+	params.SetProject(projectID)
 	resp, err := c.Projects.ProjectsServersRead(params, c.AuthInfo)
 	if err != nil {
 		return nil, err
@@ -123,8 +123,8 @@ func (c *APIClient) GetHostIDByName(hostName string) (string, error) {
 func (c *APIClient) GetServerTriggerByName(projectID, serverID, name string) (*models.ServerAction, error) {
 	params := projects.NewServiceTriggerListParams()
 	params.SetNamespace(c.Namespace)
-	params.SetProjectID(projectID)
-	params.SetServerID(serverID)
+	params.SetProject(projectID)
+	params.SetServer(serverID)
 	params.SetName(&name)
 	resp, err := c.Projects.ServiceTriggerList(params, c.AuthInfo)
 	if err != nil {
@@ -139,9 +139,9 @@ func (c *APIClient) GetServerTriggerByName(projectID, serverID, name string) (*m
 func (c *APIClient) GetServerTriggerByID(projectID, serverID, ID string) (*models.ServerAction, error) {
 	params := projects.NewServiceTriggerReadParams()
 	params.SetNamespace(c.Namespace)
-	params.SetProjectID(projectID)
-	params.SetServerID(serverID)
-	params.SetID(ID)
+	params.SetProject(projectID)
+	params.SetServer(serverID)
+	params.SetTrigger(ID)
 	resp, err := c.Projects.ServiceTriggerRead(params, c.AuthInfo)
 	if err != nil {
 		return nil, err

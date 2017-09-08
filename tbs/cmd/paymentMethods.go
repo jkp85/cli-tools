@@ -81,7 +81,7 @@ func billingDescribeCardCmd() *cobra.Command {
 
 func billingUpdateCardCmd() *cobra.Command {
 	var cardID string
-	updateBody := &models.CardData{}
+	updateBody := &models.CardDataPutandPatch{}
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: "Update credit card information.",
@@ -241,7 +241,7 @@ func billingCreateCardInteractiveCmd() *cobra.Command {
 			cli := api.Client()
 			params := billing.NewBillingCardsCreateParams()
 			params.SetNamespace(cli.Namespace)
-			body := &models.CardData{
+			body := &models.CardDataPost{
 				Token: tkn.ID,
 			}
 			params.SetCardData(body)

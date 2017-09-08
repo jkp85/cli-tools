@@ -35,7 +35,6 @@ func init() {
 		serverDescribeCmd(),
 		serverStartCmd(),
 		serverStopCmd(),
-		serverTerminateCmd(),
 		serverLogsCmd(),
 		triggerCmd,
 	)
@@ -89,7 +88,7 @@ func serverCreateCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			params.SetProjectID(projectID)
+			params.SetProject(projectID)
 			resp, err := cli.Projects.ProjectsServersCreate(params, cli.AuthInfo)
 			if err != nil {
 				return err
@@ -221,32 +220,6 @@ func serverStopCmd() *cobra.Command {
 				return err
 			}
 			jww.FEEDBACK.Println("Server stopped")
-			return nil
-		},
-	}
-	cmd.Flags().StringVar(&name, "name", "", "Server name")
-	cmd.Flags().StringVar(&serverID, "uuid", "", "Server id")
-	return cmd
-}
-
-func serverTerminateCmd() *cobra.Command {
-	var name, serverID string
-	cmd := &cobra.Command{
-		Use:   "terminate",
-		Short: "Terminate server",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cli := api.Client()
-			params := projects.NewProjectsServersTerminateParams()
-			params.SetNamespace(cli.Namespace)
-			err := setServerPathParams(params, serverID, name)
-			if err != nil {
-				return err
-			}
-			_, err = cli.Projects.ProjectsServersTerminate(params, cli.AuthInfo)
-			if err != nil {
-				return err
-			}
-			jww.FEEDBACK.Println("Server terminated")
 			return nil
 		},
 	}
@@ -398,7 +371,7 @@ func serverTriggerDescribeCmd() *cobra.Command {
 
 func serverTriggerCreateCmd() *cobra.Command {
 	var name, serverID string
-	body := &models.ServerAction{
+	body := &models.ServerActionData{
 		Webhook: &models.Webhook{
 			URL: new(string),
 		},
@@ -436,7 +409,7 @@ func serverTriggerCreateCmd() *cobra.Command {
 
 func serverTriggerUpdateCmd() *cobra.Command {
 	var name, serverID string
-	body := &models.ServerAction{
+	body := &models.ServerActionData{
 		Webhook: &models.Webhook{
 			URL: new(string),
 		},
@@ -521,15 +494,15 @@ func getPathIDs(serverID, serverName string) (string, string, error) {
 
 type (
 	ProjectIDSetter interface {
-		SetProjectID(string)
+		SetProject(string)
 	}
 	ServerPathParamsSetter interface {
 		ProjectIDSetter
-		SetID(string)
+		SetServer(string)
 	}
 	TriggerPathParamsSetter interface {
 		ProjectIDSetter
-		SetServerID(string)
+		SetServer(string)
 	}
 )
 
@@ -538,8 +511,8 @@ func setServerPathParams(target ServerPathParamsSetter, serverID, serverName str
 	if err != nil {
 		return err
 	}
-	target.SetProjectID(projectID)
-	target.SetID(serverID)
+	target.SetProject(projectID)
+	target.SetServer(serverID)
 	return nil
 }
 
@@ -548,7 +521,7 @@ func setTriggerPathParams(target TriggerPathParamsSetter, serverID, serverName s
 	if err != nil {
 		return err
 	}
-	target.SetProjectID(projectID)
-	target.SetServerID(serverID)
+	target.SetProject(projectID)
+	target.SetServer(serverID)
 	return nil
 }

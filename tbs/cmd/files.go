@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 
 	"github.com/3Blades/cli-tools/tbs/api"
 	"github.com/3Blades/cli-tools/tbs/utils"
@@ -53,7 +52,7 @@ func fileListCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			params.SetProjectID(projectID)
+			params.SetProject(projectID)
 			resp, err := cli.Projects.ProjectsProjectFilesList(params, cli.AuthInfo)
 			if err != nil {
 				return err
@@ -69,7 +68,7 @@ func getFileByName(name, projectID string) (*models.ProjectFile, error) {
 	cli := api.Client()
 	params := projects.NewProjectsProjectFilesListParams()
 	params.SetNamespace(cli.Namespace)
-	params.SetProjectID(projectID)
+	params.SetProject(projectID)
 	resp, err := cli.Projects.ProjectsProjectFilesList(params, cli.AuthInfo)
 	if err != nil {
 		return &models.ProjectFile{}, err
@@ -95,7 +94,7 @@ func fileDeleteCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			params.SetProjectID(projectID)
+			params.SetProject(projectID)
 			for _, arg := range args {
 				if !utils.IsUUID(arg) {
 					file, err := getFileByName(arg, projectID)
@@ -202,9 +201,8 @@ func fileUploadCmd() *cobra.Command {
 
 			extraParams := map[string]string{
 				"project":     projectID,
-				"public":      strconv.FormatBool(uploadBody.Public),
 				"name":        uploadBody.Name,
-				"base64_data": uploadBody.Base64Data,
+				"base64_data": uploadBody.Content,
 			}
 			if len(args) > 0 {
 				for _, path := range args {
@@ -239,8 +237,7 @@ func fileUploadCmd() *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.BoolVar(&uploadBody.Public, "public", true, "Should the file be public?")
 	flags.StringVar(&uploadBody.Name, "name", "", "The file's name, only to be used in conjunction with base64 data")
-	flags.StringVar(&uploadBody.Base64Data, "base64_data", "", "")
+	flags.StringVar(&uploadBody.Content, "content", "", "Content as base64 encoded stgring.")
 	return cmd
 }
